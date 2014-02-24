@@ -29,16 +29,16 @@ public interface RiakClient {
     public IterableFuture<String> getBucketNames()
     throws IOException;
 
-    public IterableFuture<String> getKeys(String bucket)
+    public IterableFuture<Key> getKeys(Bucket bucket)
     throws IOException;
 
-    public IterableFuture<String> getKeys(Bucket bucket)
+    public IterableFuture<String> getKeyNames(String bucket)
     throws IOException;
 
-    public IterableFuture<Reference> getReferences(String bucket)
+    public IterableFuture<String> getKeyNames(Bucket bucket)
     throws IOException;
 
-    public IterableFuture<Reference> getReferences(Bucket bucket)
+    public IterableFuture<Key> getKeys(String bucket)
     throws IOException;
 
 
@@ -46,7 +46,7 @@ public interface RiakClient {
 
     public <T> FetchRequest<T> fetch(Bucket bucket, String key, Class<T> type);
 
-    public <T> FetchRequest<T> fetch(Reference reference, Class<T> type);
+    public <T> FetchRequest<T> fetch(Key reference, Class<T> type);
 
 
     public <T> StoreRequest<T> store(String bucket, T object);
@@ -57,12 +57,12 @@ public interface RiakClient {
 
     public <T> StoreRequest<T> store(Bucket bucket, String key, T object);
 
-    public <T> StoreRequest<T> store(Reference reference, T object);
+    public <T> StoreRequest<T> store(Key reference, T object);
 
 
     public DeleteRequest delete(String bucket, String key);
 
     public DeleteRequest delete(Bucket bucket, String key);
 
-    public DeleteRequest delete(Reference reference);
+    public DeleteRequest delete(Key reference);
 }

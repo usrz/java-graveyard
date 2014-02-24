@@ -17,7 +17,7 @@ package org.usrz.libs.riak;
 
 import org.usrz.libs.riak.utils.MultiValueMap;
 
-public class LinksMap extends MultiValueMap<String, Reference>
+public class LinksMap extends MultiValueMap<String, Key>
 implements RiakClientAware {
 
     private final RiakClient client;
@@ -51,7 +51,7 @@ implements RiakClientAware {
     }
 
     @Override
-    protected Reference validateValue(String key, Reference value) {
+    protected Key validateValue(String key, Key value) {
         if (key == null) throw new NullPointerException("Null keys not supported");
         if (value == null) throw new NullPointerException("Null values not supported");
         return value;
@@ -60,35 +60,35 @@ implements RiakClientAware {
     /* ====================================================================== */
 
     public boolean add(String tag, String bucket, String key) {
-        return add(tag, new Reference(client, bucket, key));
+        return add(tag, new Key(client, bucket, key));
     }
 
     public boolean add(String tag, Bucket bucket, String key) {
-        return add(tag, new Reference(bucket, key));
+        return add(tag, new Key(bucket, key));
     }
 
     public boolean containsValue(Object tag, String bucket, String key) {
-        return containsValue(tag, new Reference(client, bucket, key));
+        return containsValue(tag, new Key(client, bucket, key));
     }
 
     public boolean containsValue(Object tag, Bucket bucket, String key) {
-        return containsValue(tag, new Reference(bucket, key));
+        return containsValue(tag, new Key(bucket, key));
     }
 
     public void put(String tag, String bucket, String key) {
-        put(tag, new Reference(client, bucket, key));
+        put(tag, new Key(client, bucket, key));
     }
 
     public void put(String tag, Bucket bucket, String key) {
-        put(tag, new Reference(bucket, key));
+        put(tag, new Key(bucket, key));
     }
 
     public boolean remove(Object tag, String bucket, String key) {
-        return remove(tag, new Reference(client, bucket, key));
+        return remove(tag, new Key(client, bucket, key));
     }
 
     public boolean remove(Object tag, Bucket bucket, String key) {
-        return remove(tag, new Reference(bucket, key));
+        return remove(tag, new Key(bucket, key));
     }
 
 }

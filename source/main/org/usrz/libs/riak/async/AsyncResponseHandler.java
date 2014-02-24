@@ -36,7 +36,7 @@ import org.usrz.libs.logging.Log;
 import org.usrz.libs.riak.IndexMapBuilder;
 import org.usrz.libs.riak.LinksMapBuilder;
 import org.usrz.libs.riak.MetadataBuilder;
-import org.usrz.libs.riak.Reference;
+import org.usrz.libs.riak.Key;
 import org.usrz.libs.riak.Response;
 import org.usrz.libs.riak.SiblingsException;
 import org.usrz.libs.riak.utils.SettableFuture;
@@ -163,7 +163,7 @@ public class AsyncResponseHandler<T> implements AsyncHandler<Void> {
         /* Set up our reference */
         final String location = map.getFirstValue("Location");
         final URI locationUri = location == null ? headers.getUrl() : headers.getUrl().resolve(location);
-        response.setReference(new Reference(client, locationUri.getRawPath()));
+        response.setReference(new Key(client, locationUri.getRawPath()));
 
         /* Set up our last modified date */
         final String lastModified = map.getFirstValue("Last-Modified");
@@ -285,7 +285,7 @@ public class AsyncResponseHandler<T> implements AsyncHandler<Void> {
 
         @Override
         public T call() throws Exception {
-            final Reference reference = new Reference(client, request.getRawUrl());
+            final Key reference = new Key(client, request.getRawUrl());
             final Scanner scanner = new Scanner(input, "UTF8");
             final Set<String> siblings = new HashSet<String>();
             try {

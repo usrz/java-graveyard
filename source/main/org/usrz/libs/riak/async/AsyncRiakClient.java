@@ -31,7 +31,7 @@ import org.usrz.libs.riak.IndexMap;
 import org.usrz.libs.riak.LinksMap;
 import org.usrz.libs.riak.Metadata;
 import org.usrz.libs.riak.Quorum;
-import org.usrz.libs.riak.Reference;
+import org.usrz.libs.riak.Key;
 import org.usrz.libs.riak.Response;
 import org.usrz.libs.riak.annotations.RiakIntrospector;
 import org.usrz.libs.riak.utils.IterableFuture;
@@ -126,7 +126,7 @@ public class AsyncRiakClient extends AbstractRiakClient {
     }
 
     @Override
-    public IterableFuture<String> getKeys(String bucket)
+    public IterableFuture<String> getKeyNames(String bucket)
     throws IOException {
         final Request r = client.prepareGet("http://127.0.0.1:4198/buckets/" + RiakUtils.encode(bucket) + "/keys/").addQueryParameter("keys", "stream").build();
         final AsyncChunkedHandler h = new AsyncChunkedHandler(this, r);
@@ -280,9 +280,9 @@ public class AsyncRiakClient extends AbstractRiakClient {
     }
 
     private BoundRequestBuilder build(LinksMap linksMap, BoundRequestBuilder builder) {
-        for (Entry<String, Set<Reference>> entry: linksMap.entrySet()) {
+        for (Entry<String, Set<Key>> entry: linksMap.entrySet()) {
             final String tag = entry.getKey();
-            for (Reference reference: entry.getValue()) {
+            for (Key reference: entry.getValue()) {
                 final String location = reference.getLocation();
                 builder.addHeader("Link", "<" + location + ">; riaktag=\"" + tag + "\"");
             }

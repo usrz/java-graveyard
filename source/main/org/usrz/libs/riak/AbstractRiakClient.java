@@ -23,7 +23,6 @@ import java.util.concurrent.TimeoutException;
 import org.usrz.libs.riak.utils.IterableFuture;
 import org.usrz.libs.riak.utils.WrappingIterableFuture;
 
-
 public abstract class AbstractRiakClient implements RiakClient {
 
     @Override
@@ -44,28 +43,30 @@ public abstract class AbstractRiakClient implements RiakClient {
     }
 
     @Override
-    public IterableFuture<String> getKeys(Bucket bucket)
+    public IterableFuture<String> getKeyNames(Bucket bucket)
     throws IOException {
-        return this.getKeys(bucket.getName());
+        return this.getKeyNames(bucket.getName());
     }
 
     @Override
-    public IterableFuture<Reference> getReferences(final String bucket)
+    public IterableFuture<Key> getKeys(final String bucket)
     throws IOException {
-        return new WrappingIterableFuture<Reference, String>(this.getKeys(bucket)) {
+        return new WrappingIterableFuture<Key, String>(this.getKeyNames(bucket)) {
             @Override
-            public Reference next(long timeout, TimeUnit unit)
+            public Key next(long timeout, TimeUnit unit)
             throws InterruptedException, ExecutionException, TimeoutException {
-                return new Reference(AbstractRiakClient.this, bucket, future.next(timeout, unit));
+                return new Key(AbstractRiakClient.this, bucket, future.next(timeout, unit));
             }
         };
     }
 
     @Override
-    public IterableFuture<Reference> getReferences(Bucket bucket)
+    public IterableFuture<Key> getKeys(Bucket bucket)
     throws IOException {
-        return this.getReferences(bucket.getName());
+        return this.getKeys(bucket.getName());
     }
+
+    /* ====================================================================== */
 
     @Override
     public <T> FetchRequest<T> fetch(Bucket bucket, String key, Class<T> type) {
@@ -73,7 +74,7 @@ public abstract class AbstractRiakClient implements RiakClient {
     }
 
     @Override
-    public <T> FetchRequest<T> fetch(Reference reference, Class<T> type) {
+    public <T> FetchRequest<T> fetch(Key reference, Class<T> type) {
         return this.fetch(reference.getBucket(), reference.getKey(), type);
     }
 
@@ -88,7 +89,7 @@ public abstract class AbstractRiakClient implements RiakClient {
     }
 
     @Override
-    public <T> StoreRequest<T> store(Reference reference, T object) {
+    public <T> StoreRequest<T> store(Key reference, T object) {
         return this.store(reference.getBucket(), reference.getKey(), object);
     }
 
@@ -98,7 +99,8 @@ public abstract class AbstractRiakClient implements RiakClient {
     }
 
     @Override
-    public DeleteRequest delete(Reference reference) {
+    public DeleteRequest delete(Key reference) {
         return this.delete(reference.getBucket(), reference.getKey());
     }
+
 }

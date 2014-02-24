@@ -19,16 +19,16 @@ import java.util.Set;
 
 public class SiblingsException extends IllegalStateException {
 
-    private final Reference reference;
+    private final Key reference;
     private final Set<String> siblings;
 
-    public SiblingsException(Reference reference, Set<String> siblings) {
+    public SiblingsException(Key reference, Set<String> siblings) {
         super(siblings.size() + " siblings detected in " + reference.getLocation());
         this.reference = reference;
         this.siblings = siblings;
     }
 
-    public Reference getReference() {
+    public Key getReference() {
         return reference;
     }
 

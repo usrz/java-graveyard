@@ -51,12 +51,12 @@ public class Bucket implements RiakLocation {
 
     public IterableFuture<String> getKeys()
     throws IOException {
-        return client.getKeys(name);
+        return client.getKeyNames(name);
     }
 
-    public IterableFuture<Reference> getReferences()
+    public IterableFuture<Key> getReferences()
     throws IOException {
-        return client.getReferences(name);
+        return client.getKeys(name);
     }
 
     public <T> FetchRequest<T> fetch(String key, Class<T> type) {

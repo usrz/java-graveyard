@@ -29,7 +29,7 @@ public interface Response<T> extends RiakClientAware {
 
     public Date getLastModified();
 
-    public Reference getReference();
+    public Key getReference();
 
     public String getBucket();
 

@@ -22,7 +22,7 @@ import java.util.concurrent.Future;
 import org.testng.annotations.Test;
 import org.usrz.libs.logging.Log;
 import org.usrz.libs.riak.Bucket;
-import org.usrz.libs.riak.Reference;
+import org.usrz.libs.riak.Key;
 import org.usrz.libs.riak.Response;
 import org.usrz.libs.riak.RiakClient;
 import org.usrz.libs.riak.StoreRequest;
@@ -48,7 +48,7 @@ public class AsyncRiakClientTest extends AbstractTest {
         for (Bucket bucket: client.getBuckets()) {
             buckets ++;
             log.debug("Found bucket \"%s\"", bucket.getName());
-            for (Reference reference: bucket.getReferences()) {
+            for (Key reference: bucket.getReferences()) {
                 references ++;
                 log.debug("   in bucket \"%s\" found key \"%s\"", reference.getBucket(), reference.getKey() );
             }
@@ -170,8 +170,8 @@ public class AsyncRiakClientTest extends AbstractTest {
         final AnnotatedObject object = new AnnotatedObject("someValue",
                                                            new String[] { "theIndexValue1", "theIndexValue2" },
                                                            new String[] { "metadataValue1", "metadataValue2" },
-                                                           new Reference(client, "foo1", "bar1"),
-                                                           new Reference(client, "foo2", "bar2"));
+                                                           new Key(client, "foo1", "bar1"),
+                                                           new Key(client, "foo2", "bar2"));
 
         final StoreRequest<AnnotatedObject> storeRequest1 = bucket.store(object).setReturnBody(true);
         assertTrue(storeRequest1.getIndexMap().containsValue("myindex_bin", "theIndexValue1"));
@@ -208,15 +208,15 @@ public class AsyncRiakClientTest extends AbstractTest {
 
         private Collection<String> myIndex;
         private Collection<String> myMetadata;
-        private Reference firstLink;
-        private Reference secondLink;
+        private Key firstLink;
+        private Key secondLink;
 
         public AnnotatedObject() {
             super();
         }
 
         private AnnotatedObject(String value, String[] index, String[] metadata,
-                                Reference firstLink, Reference secondLink) {
+                                Key firstLink, Key secondLink) {
             setValue(value);
             setMyIndex(Arrays.asList(index));
             setMyMetadata(Arrays.asList(metadata));
@@ -245,22 +245,22 @@ public class AsyncRiakClientTest extends AbstractTest {
         }
 
         @RiakLink @JsonIgnore
-        public Reference getFirstLink() {
+        public Key getFirstLink() {
             return firstLink;
         }
 
         @RiakLink @JsonIgnore
-        public void setFirstLink(Reference firstLink) {
+        public void setFirstLink(Key firstLink) {
             this.firstLink = firstLink;
         }
 
         @RiakLink @JsonIgnore
-        public Reference getSecondLink() {
+        public Key getSecondLink() {
             return secondLink;
         }
 
         @RiakLink @JsonIgnore
-        public void setSecondLink(Reference secondLink) {
+        public void setSecondLink(Key secondLink) {
             this.secondLink = secondLink;
         }
 

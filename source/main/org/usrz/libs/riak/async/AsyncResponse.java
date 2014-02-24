@@ -20,7 +20,7 @@ import java.util.Date;
 import org.usrz.libs.riak.IndexMap;
 import org.usrz.libs.riak.LinksMap;
 import org.usrz.libs.riak.Metadata;
-import org.usrz.libs.riak.Reference;
+import org.usrz.libs.riak.Key;
 import org.usrz.libs.riak.Response;
 
 public class AsyncResponse<T> implements Response<T> {
@@ -32,7 +32,7 @@ public class AsyncResponse<T> implements Response<T> {
 
     private String vectorClock;
     private Date lastModified;
-    private Reference reference;
+    private Key reference;
     private boolean successful;
     private int status;
     private T entity;
@@ -77,7 +77,7 @@ public class AsyncResponse<T> implements Response<T> {
     }
 
     @Override
-    public Reference getReference() {
+    public Key getReference() {
         return reference;
     }
 
@@ -114,7 +114,7 @@ public class AsyncResponse<T> implements Response<T> {
         this.lastModified = lastModified;
     }
 
-    protected void setReference(Reference reference) {
+    protected void setReference(Key reference) {
         this.reference = reference;
     }
 

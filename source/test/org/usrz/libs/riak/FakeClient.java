@@ -27,7 +27,7 @@ public class FakeClient extends AbstractRiakClient {
     }
 
     @Override
-    public IterableFuture<String> getKeys(String bucket)
+    public IterableFuture<String> getKeyNames(String bucket)
     throws IOException {
         throw new UnsupportedOperationException();
     }

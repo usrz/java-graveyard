@@ -20,7 +20,7 @@ import java.util.regex.Pattern;
 
 import org.usrz.libs.riak.utils.RiakUtils;
 
-public class Reference implements RiakLocation {
+public class Key implements RiakLocation {
 
     private static final Pattern PATTERN = Pattern.compile("(.*)/(riak|buckets)/([^/]+)/(keys/)?([^/\\?]+)([/\\?].*)?");
 
@@ -28,7 +28,7 @@ public class Reference implements RiakLocation {
     private final String bucket;
     private final String key;
 
-    public Reference(RiakClient client, String location) {
+    public Key(RiakClient client, String location) {
         if (client == null) throw new NullPointerException("Null client");
         final Matcher matcher = PATTERN.matcher(location);
         if (matcher.matches()) {
@@ -44,7 +44,7 @@ public class Reference implements RiakLocation {
         }
     }
 
-    public Reference(Bucket bucket, String key) {
+    public Key(Bucket bucket, String key) {
         if (key == null) throw new NullPointerException("Null key");
         if (key.length() == 0) throw new IllegalArgumentException("Empty key");
 
@@ -53,7 +53,7 @@ public class Reference implements RiakLocation {
         this.key = key;
     }
 
-    public Reference(RiakClient client, String bucket, String key) {
+    public Key(RiakClient client, String bucket, String key) {
         this(client.getBucket(bucket), key);
     }
 
@@ -80,7 +80,7 @@ public class Reference implements RiakLocation {
         if (object == this) return true;
         if (object == null) return false;
         try {
-            final Reference index = (Reference) object;
+            final Key index = (Key) object;
             return bucket.equals(index.bucket) && key.equals(index.key);
         } catch (ClassCastException exception) {
             return false;

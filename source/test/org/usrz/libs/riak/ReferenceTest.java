@@ -24,7 +24,7 @@ public class ReferenceTest extends AbstractTest {
 
     @Test
     public void testEncoded() {
-        final Reference reference = new Reference(client, "/buckets/dev%40usrz/keys/f%C3%BCbar");
+        final Key reference = new Key(client, "/buckets/dev%40usrz/keys/f%C3%BCbar");
         assertEquals(reference.getBucket(), "dev@usrz");
         assertEquals(reference.getKey(), "f\u00FCbar");
     }
@@ -39,11 +39,11 @@ public class ReferenceTest extends AbstractTest {
                                            "http://127.0.0.1:1234/riak/mybucket/mykey/",
                                            "http://127.0.0.1:1234/buckets/mybucket/keys/mykey",
                                            "http://127.0.0.1:1234/buckets/mybucket/keys/mykey/" }) {
-            final Reference reference1 = new Reference(client, string);
+            final Key reference1 = new Key(client, string);
             assertEquals(reference1.getBucket(), "mybucket");
             assertEquals(reference1.getKey(), "mykey");
 
-            final Reference reference2 = new Reference(client, string + "?foo=bar");
+            final Key reference2 = new Key(client, string + "?foo=bar");
             assertEquals(reference2.getBucket(), "mybucket");
             assertEquals(reference2.getKey(), "mykey");
         }

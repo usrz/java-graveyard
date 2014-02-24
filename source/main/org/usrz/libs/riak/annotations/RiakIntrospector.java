@@ -28,7 +28,7 @@ import org.usrz.libs.riak.IndexMap;
 import org.usrz.libs.riak.IndexType;
 import org.usrz.libs.riak.LinksMap;
 import org.usrz.libs.riak.Metadata;
-import org.usrz.libs.riak.Reference;
+import org.usrz.libs.riak.Key;
 import org.usrz.libs.riak.RiakClient;
 import org.usrz.libs.utils.beans.IntrospectedProperty;
 import org.usrz.libs.utils.beans.IntrospectionDescriptor;
@@ -133,9 +133,9 @@ public class RiakIntrospector {
         return null;
     }
 
-    public <T> Reference getReference(T instance) {
+    public <T> Key getReference(T instance) {
         try {
-            return new Reference(client, this.getBucket(instance), this.getKey(instance));
+            return new Key(client, this.getBucket(instance), this.getKey(instance));
         } catch (RuntimeException exception) {
             throw new IllegalStateException("Unable to construct reference from " + instance.getClass().getName() + ": " + exception.getMessage(), exception);
         }
@@ -237,10 +237,10 @@ public class RiakIntrospector {
                     for (Object link: combine(property.readAll(instance))) {
                         if (link instanceof LinksMap) {
                             linksMap.addAll((LinksMap) link);
-                        } else if (link instanceof Reference) {
-                            linksMap.add(tag, (Reference) link);
+                        } else if (link instanceof Key) {
+                            linksMap.add(tag, (Key) link);
                         } else if (link instanceof String) {
-                            linksMap.add(tag, new Reference(client, (String) link));
+                            linksMap.add(tag, new Key(client, (String) link));
                         } else {
                             linksMap.add(tag, getReference(link));
                         }
@@ -254,7 +254,7 @@ public class RiakIntrospector {
 
     /* ====================================================================== */
 
-    public <T> RiakIntrospector setReference(T instance, Reference reference) {
+    public <T> RiakIntrospector setReference(T instance, Key reference) {
         final IntrospectionDescriptor<T> descriptor = descriptor(instance);
         final Bucket bucket = client.getBucket(reference.getBucket());
 
@@ -267,7 +267,7 @@ public class RiakIntrospector {
 
         for (Entry<RiakKey, Set<IntrospectedProperty<T>>> entry: descriptor.getProperties(RiakKey.class).entrySet()) {
             for (IntrospectedProperty<T> property: entry.getValue()) {
-                if (property.canWrite(Reference.class)) property.write(instance, reference);
+                if (property.canWrite(Key.class)) property.write(instance, reference);
                 if (property.canWrite(String.class)) property.write(instance, reference.getKey());
             }
         }
@@ -337,8 +337,8 @@ public class RiakIntrospector {
                     }
 
                     /* Writes are dependant on type here */
-                    for (Reference reference: linksMap.get(tag)) {
-                        if (property.canWrite(Reference.class)) property.write(instance, reference);
+                    for (Key reference: linksMap.get(tag)) {
+                        if (property.canWrite(Key.class)) property.write(instance, reference);
                         else property.write(instance, reference.getLocation());
                     }
                 }
