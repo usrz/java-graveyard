@@ -38,7 +38,7 @@ public class AsyncRiakClientTest extends AbstractTest {
 
     private final Log log = new Log();
 
-    @Test
+    @Test(groups="local")
     public void testGetBucketsAndKeys()
     throws Exception {
         final AsyncRiakClient client = new AsyncRiakClient(new AsyncHttpClient());
@@ -56,7 +56,7 @@ public class AsyncRiakClientTest extends AbstractTest {
         log.info("Found a total of %d buckets and %d keys", buckets, references);
     }
 
-    @Test
+    @Test(groups="local")
     public void testStoreFetchDelete()
     throws Exception {
         final RiakClient client = new AsyncRiakClient(new AsyncHttpClient());
@@ -161,7 +161,7 @@ public class AsyncRiakClientTest extends AbstractTest {
 
     /* ====================================================================== */
 
-    @Test
+    @Test(groups="local")
     public void testAnnotations()
     throws Exception {
         final RiakClient client = new AsyncRiakClient(new AsyncHttpClient());
