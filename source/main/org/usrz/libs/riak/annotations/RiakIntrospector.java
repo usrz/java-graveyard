@@ -282,26 +282,111 @@ public class RiakIntrospector {
         return this;
     }
 
-    public RiakIntrospector setReference(Object instance, Reference reference) {
+    public <T> RiakIntrospector setReference(T instance, Reference reference) {
         setBucket(instance, reference.getBucket());
         setKey(instance, reference.getKey());
         return this;
     }
 
-    public RiakIntrospector setIndexMap(Object instance, IndexMap indexMap) {
-        //TODO
-        throw new UnsupportedOperationException();
+    public <T> RiakIntrospector setIndexMap(T instance, IndexMap indexMap) {
+        final IntrospectionDescriptor<T> descriptor = descriptor(instance);
+
+        for (Entry<RiakIndex, Set<IntrospectedProperty<T>>> entry: descriptor.getProperties(RiakIndex.class).entrySet()) {
+            for (IntrospectedProperty<T> property: entry.getValue()) {
+                if (property.canWrite()) {
+                    final RiakIndex annotation = entry.getKey();
+                    final String name = indexName(annotation, property);
+
+                    /* Gets the whole map? Easy! */
+                    if (property.canWrite(IndexMap.class)) {
+                        property.write(instance, indexMap);
+                        continue;
+                    } else if (name == null) {
+                        throw new IllegalStateException("Unnamed @RiakIndex annotation should accept an IndexMap for " + property);
+                    }
+
+                    /* Writes are dependant on type here */
+                    switch (annotation.type()) {
+                        case INTEGER: for (String value: indexMap.get(name, INTEGER)) property.write(instance, value); break;
+                        case BINARY:  for (String value: indexMap.get(name, BINARY))  property.write(instance, value); break;
+                        case AUTODETECT:
+                            if (property.canWrite(Number.class)) {
+                                for (String value: indexMap.get(name, INTEGER)) property.write(instance, value);
+                            } else if (property.canWrite(Integer.class)) {
+                                for (String value: indexMap.get(name, INTEGER)) property.write(instance, value);
+                            } else if (property.canWrite(Long.class)) {
+                                for (String value: indexMap.get(name, INTEGER)) property.write(instance, value);
+                            } else if (property.canWrite(String.class)) {
+                                for (String value: indexMap.get(name, BINARY))  property.write(instance, value);
+                            } else {
+                                throw new IllegalStateException("Non-typed @RiakIndex property must accept either a Number, Integer, Long or String " + property);
+                            }
+                            break;
+                        default: throw new IllegalStateException("Unsupported index type " + annotation.type() + " reading " + property);
+                    }
+                }
+            }
+        }
+
+        return this;
     }
 
 
-    public RiakIntrospector setLinksMap(Object instance, LinksMap linksMap) {
-        //TODO
-        throw new UnsupportedOperationException();
+    public <T> RiakIntrospector setLinksMap(T instance, LinksMap linksMap) {
+        final IntrospectionDescriptor<T> descriptor = descriptor(instance);
+
+        for (Entry<RiakLink, Set<IntrospectedProperty<T>>> entry: descriptor.getProperties(RiakLink.class).entrySet()) {
+            for (IntrospectedProperty<T> property: entry.getValue()) {
+                if (property.canWrite()) {
+                    final RiakLink annotation = entry.getKey();
+                    final String tag = linkTag(annotation, property);
+
+                    /* Gets the whole map? Easy! */
+                    if (property.canWrite(LinksMap.class)) {
+                        property.write(instance, linksMap);
+                        continue;
+                    } else if (tag == null) {
+                        throw new IllegalStateException("Unnamed @RiakLink annotation should accept an LinksMap for " + property);
+                    }
+
+                    /* Writes are dependant on type here */
+                    for (Reference reference: linksMap.get(tag)) {
+                        if (property.canWrite(Reference.class)) property.write(instance, reference);
+                        else property.write(instance, reference.getLocation());
+                    }
+                }
+            }
+        }
+
+        return this;
     }
 
-    public RiakIntrospector setMetadata(Object instance, Metadata metadata) {
-        //TODO
-        throw new UnsupportedOperationException();
+    public <T> RiakIntrospector setMetadata(T instance, Metadata metadata) {
+        final IntrospectionDescriptor<T> descriptor = descriptor(instance);
+
+        for (Entry<RiakMetadata, Set<IntrospectedProperty<T>>> entry: descriptor.getProperties(RiakMetadata.class).entrySet()) {
+            for (IntrospectedProperty<T> property: entry.getValue()) {
+                if (property.canWrite()) {
+                    final RiakMetadata annotation = entry.getKey();
+                    final String field = metadataField(annotation, property);
+
+                    /* Gets the whole map? Easy! */
+                    if (property.canWrite(Metadata.class)) {
+                        property.write(instance, metadata);
+                        continue;
+                    } else if (field == null) {
+                        throw new IllegalStateException("Unnamed @RiakMetadata annotation should accept an Metadata for " + property);
+                    }
+
+                    /* Do our best... */
+                    for (String value: metadata.get(field)) {
+                        property.write(instance, value);
+                    }
+                }
+            }
+        }
+
+        return this;
     }
 
 }
