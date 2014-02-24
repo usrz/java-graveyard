@@ -15,9 +15,15 @@
  * ========================================================================== */
 package org.usrz.libs.riak;
 
+import java.util.StringTokenizer;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import org.usrz.libs.riak.utils.MultiValueMapBuilder;
 
 public class LinksMapBuilder extends MultiValueMapBuilder<String, Reference, LinksMap, LinksMapBuilder> {
+
+    private static final Pattern LINK_PATTERN = Pattern.compile("\\s*<([^>]+)>\\s*;\\s*riaktag\\s*=\\s*\"?([^\"]+)\"?\\s*");
 
     public LinksMapBuilder() {
         this(null);
@@ -26,6 +32,26 @@ public class LinksMapBuilder extends MultiValueMapBuilder<String, Reference, Lin
     public LinksMapBuilder(LinksMap map) {
         super(map == null ? new LinksMap() : map);
     }
+
+    /* ====================================================================== */
+
+    public LinksMapBuilder parseHeader(String header) {
+        final StringTokenizer tokenizer = new StringTokenizer(header, ", ", false);
+        while (tokenizer.hasMoreTokens()) {
+            final String token = tokenizer.nextToken();
+            final Matcher matcher = LINK_PATTERN.matcher(token);
+            if (matcher.matches()) add(matcher.group(2), new Reference(matcher.group(1)));
+        }
+        return this;
+    }
+
+    public LinksMapBuilder parseHeaders(Iterable<String> headers) {
+        if (headers == null) return this;
+        for (String value: headers) parseHeader(value);
+        return this;
+    }
+
+    /* ====================================================================== */
 
     public LinksMapBuilder add(String tag, String bucket, String key) {
         return add(tag, new Reference(bucket, key));

@@ -15,9 +15,13 @@
  * ========================================================================== */
 package org.usrz.libs.riak;
 
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
+import java.util.StringTokenizer;
 
 import org.usrz.libs.riak.utils.MultiValueMapBuilder;
+import org.usrz.libs.riak.utils.RiakUtils;
 
 public class IndexMapBuilder extends MultiValueMapBuilder<Index, String, IndexMap, IndexMapBuilder> {
 
@@ -27,6 +31,30 @@ public class IndexMapBuilder extends MultiValueMapBuilder<Index, String, IndexMa
 
     public IndexMapBuilder(IndexMap map) {
         super(map == null ? new IndexMap() : map);
+    }
+
+    /* ====================================================================== */
+
+    public IndexMapBuilder parseHeader(String name, String value) {
+        if (name.toLowerCase().trim().startsWith("x-riak-index-")) {
+            final Index index = new Index(name);
+            final StringTokenizer tokenizer = new StringTokenizer(value, ", ", false);
+            while (tokenizer.hasMoreTokens()) {
+                this.add(index, RiakUtils.decode(tokenizer.nextToken().trim()));
+            }
+        }
+        return this;
+    }
+
+    public IndexMapBuilder parseHeaders(Map<String, ? extends Iterable<String>> headers) {
+        if (headers == null) return this;
+        for (Entry<String, ? extends Iterable<String>> header: headers.entrySet()) {
+            final String name = header.getKey();
+            for (String value: header.getValue()) {
+                parseHeader(name, value);
+            }
+        }
+        return this;
     }
 
     /* ====================================================================== */
