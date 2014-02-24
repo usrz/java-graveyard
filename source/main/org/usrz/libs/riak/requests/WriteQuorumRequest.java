@@ -16,6 +16,7 @@
 package org.usrz.libs.riak.requests;
 
 import org.usrz.libs.riak.Quorum;
+import org.usrz.libs.riak.Request;
 
 public interface WriteQuorumRequest<T, R extends WriteQuorumRequest<T, R>>
 extends Request<T> {

@@ -23,16 +23,24 @@ import java.util.Arrays;
 import java.util.Collection;
 
 import org.testng.annotations.Test;
+import org.usrz.libs.riak.Bucket;
 import org.usrz.libs.riak.FakeClient;
 import org.usrz.libs.riak.IndexMap;
+import org.usrz.libs.riak.IndexMapBuilder;
 import org.usrz.libs.riak.LinksMap;
+import org.usrz.libs.riak.LinksMapBuilder;
 import org.usrz.libs.riak.Metadata;
+import org.usrz.libs.riak.MetadataBuilder;
 import org.usrz.libs.riak.Reference;
+import org.usrz.libs.riak.RiakClient;
 import org.usrz.libs.testing.AbstractTest;
 
 public class RiakIntrospectorTest extends AbstractTest {
 
     private final RiakIntrospector introspector = new RiakIntrospector(new FakeClient());
+    private final RiakClient client = new FakeClient();
+
+    /* ====================================================================== */
 
     @Test
     public void testEmptyObject() {
@@ -44,14 +52,16 @@ public class RiakIntrospectorTest extends AbstractTest {
         assertTrue(introspector.getMetadata(object).isEmpty());
     }
 
+    /* ====================================================================== */
+
     @Test
-    public void testIntrospectableObject() {
+    public void testReadIntrospectableObject() {
 
         final IntrospectableObject object = new IntrospectableObject();
 
         assertEquals(introspector.getKey(object), "myKey");
         assertEquals(introspector.getBucket(object), "myBucket");
-        assertEquals(introspector.getReference(object), new Reference("myBucket", "myKey"));
+        assertEquals(introspector.getReference(object), new Reference(client, "myBucket", "myKey"));
 
         final IndexMap index = introspector.getIndexMap(object);
         assertEquals(index.size(), 4);
@@ -92,22 +102,20 @@ public class RiakIntrospectorTest extends AbstractTest {
         final LinksMap links = introspector.getLinksMap(object);
         assertEquals(links.size(), 6);
 
-        assertTrue(links.containsValue("referencelink",       new Reference("myLinkedBucket1", "myLinkedKey1")));
-        assertTrue(links.containsValue("referenceoverridden", new Reference("myLinkedBucket2", "myLinkedKey2")));
-        assertTrue(links.containsValue("newstringlink",       new Reference("myLinkedBucket3", "myLinkedKey3")));
-        assertTrue(links.containsValue("oldstringlink",       new Reference("myLinkedBucket4", "myLinkedKey4")));
-        assertTrue(links.containsValue("introspectedlink",    new Reference("myBucket",        "myKey")));
-        assertTrue(links.containsValue("multiple",            new Reference("b1",              "k1")));
-        assertTrue(links.containsValue("multiple",            new Reference("b2",              "k2")));
-        assertTrue(links.containsValue("multiple",            new Reference("b3",              "k3")));
-        assertTrue(links.containsValue("multiple",            new Reference("b4",              "k4")));
-        assertTrue(links.containsValue("multiple",            new Reference("b5",              "k5")));
-        assertTrue(links.containsValue("multiple",            new Reference("b6",              "k6")));
+        assertTrue(links.containsValue("referencelink",       new Reference(client, "myLinkedBucket1", "myLinkedKey1")));
+        assertTrue(links.containsValue("referenceoverridden", new Reference(client, "myLinkedBucket2", "myLinkedKey2")));
+        assertTrue(links.containsValue("newstringlink",       new Reference(client, "myLinkedBucket3", "myLinkedKey3")));
+        assertTrue(links.containsValue("oldstringlink",       new Reference(client, "myLinkedBucket4", "myLinkedKey4")));
+        assertTrue(links.containsValue("introspectedlink",    new Reference(client, "myBucket",        "myKey")));
+        assertTrue(links.containsValue("multiple",            new Reference(client, "b1",              "k1")));
+        assertTrue(links.containsValue("multiple",            new Reference(client, "b2",              "k2")));
+        assertTrue(links.containsValue("multiple",            new Reference(client, "b3",              "k3")));
+        assertTrue(links.containsValue("multiple",            new Reference(client, "b4",              "k4")));
+        assertTrue(links.containsValue("multiple",            new Reference(client, "b5",              "k5")));
+        assertTrue(links.containsValue("multiple",            new Reference(client, "b6",              "k6")));
 
 
     }
-
-    /* ====================================================================== */
 
     private class IntrospectableObject {
 
@@ -143,21 +151,17 @@ public class RiakIntrospectorTest extends AbstractTest {
         @RiakIndex(name="multipleValues", type=RiakIndex.Type.BINARY)
         private final int[] nonStandard4() { return new int[]{ 1, 2, 3 , 4 }; }
 
-        /* ================================================================== */
-
         @RiakMetadata
         private final String getMyMetadata() { return "metadataValue1"; };
 
         @RiakMetadata("anotherField")
         private final String getThisIsHidden() { return "metadataValue2"; };
 
-        /* ================================================================== */
-
         @RiakLink
-        private final Reference getReferenceLink() { return new Reference("myLinkedBucket1", "myLinkedKey1"); }
+        private final Reference getReferenceLink() { return new Reference(client, "myLinkedBucket1", "myLinkedKey1"); }
 
         @RiakLink("referenceOverridden")
-        private final Reference getReferenceLink2() { return new Reference("myLinkedBucket2", "myLinkedKey2"); }
+        private final Reference getReferenceLink2() { return new Reference(client, "myLinkedBucket2", "myLinkedKey2"); }
 
         @RiakLink
         private final String getNewStringLink() { return "/buckets/myLinkedBucket3/keys/myLinkedKey3"; }
@@ -169,7 +173,7 @@ public class RiakIntrospectorTest extends AbstractTest {
         private final Object getIntrospectedLink() { return this; }
 
         @RiakLink("multiple")
-        private final Collection<?> multiple1() { return Arrays.asList(new Object[]{ new Reference("b1", "k1"), "/buckets/b2/keys/k2/" }); }
+        private final Collection<?> multiple1() { return Arrays.asList(new Object[]{ new Reference(client, "b1", "k1"), "/buckets/b2/keys/k2/" }); }
 
         @RiakLink("multiple")
         private final Object[] multiple2() { return new Object[]{ "/riak/b3/k3/", "/riak/b4/keys/k4" }; }
@@ -185,4 +189,81 @@ public class RiakIntrospectorTest extends AbstractTest {
                                          }
     }
 
+    /* ====================================================================== */
+
+    private final Reference reference = new Reference(client, "myBucket", "myKey");
+    private final LinksMap linksMap = new LinksMapBuilder(client).add("linkTag1", new Reference(client, "linkBucket1", "linkKey1"))
+                                                                 .add("linkTag2", new Reference(client, "linkBucket2", "linkKey2"))
+                                                                 .build();
+    private final IndexMap indexMap = new IndexMapBuilder().add("binary_idx", BINARY, "value")
+                                                           .add("integer_idx", INTEGER, "-12")
+                                                           .build();
+    private final Metadata metadata = new MetadataBuilder().add("field1", "value1")
+                                                           .add("field2", "value2")
+                                                           .build();
+
+//    @Test
+//    public void testReference() {
+//        final ReferenceObject object = new ReferenceObject();
+//        assertNull(object.reference);
+//        introspector.setReference(object, reference);
+//        assertSame(object.reference, reference);
+//        final Reference gotten = introspector.getReference(object);
+//        assertSame(gotten, reference);
+//    }
+//
+//    private class ReferenceObject {
+//        @RiakKey private Reference reference;
+//    }
+
+    /* ====================================================================== */
+
+    @Test
+    public void testEmptyInstrumentation() {
+        /* Thou shall not explode! */
+        final Object object = new Object();
+        introspector.setReference(object, reference);
+        introspector.setIndexMap(object, indexMap);
+        introspector.setLinksMap(object, linksMap);
+        introspector.setMetadata(object, metadata);
+    }
+
+    @Test
+    public void testSimpleInstrumentationKB() {
+        final SimpleInstrumentableKB object = new SimpleInstrumentableKB();
+        introspector.setReference(object, reference);
+        assertEquals(object.k, reference.getKey());
+        assertEquals(object.b.getName(), reference.getBucket());
+    }
+
+    private class SimpleInstrumentableKB {
+        private String k; @RiakKey    public void setK(String k) { this.k = k; };
+        private Bucket b; @RiakBucket public void setB(Bucket b) { this.b = b; };
+    }
+
+    @Test
+    public void testSimpleInstrumentationKBS() {
+        final SimpleInstrumentableKBS object = new SimpleInstrumentableKBS();
+        introspector.setReference(object, reference);
+        assertEquals(object.k, reference.getKey());
+        assertEquals(object.b, reference.getBucket());
+    }
+
+    private class SimpleInstrumentableKBS {
+        private String k; @RiakKey    public void setK(String k) { this.k = k; };
+        private String b; @RiakBucket public void setB(String b) { this.b = b; };
+    }
+
+//    @Test
+//    public void testSimpleInstrumentationR() {
+//        final SimpleInstrumentableR object = new SimpleInstrumentableKBS();
+//        introspector.setReference(object, reference);
+//        assertEquals(object.k, reference.getKey());
+//        assertEquals(object.b, reference.getBucket());
+//    }
+//
+//    private class SimpleInstrumentableR {
+//        private String k; @RiakKey    public void setK(String k) { this.k = k; };
+//        private String b; @RiakBucket public void setB(String b) { this.b = b; };
+//    }
 }

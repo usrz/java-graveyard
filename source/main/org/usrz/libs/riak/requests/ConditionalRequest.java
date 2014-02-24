@@ -17,6 +17,8 @@ package org.usrz.libs.riak.requests;
 
 import java.util.Date;
 
+import org.usrz.libs.riak.Request;
+
 public interface ConditionalRequest<T, R extends ConditionalRequest<T, R>>
 extends Request<T> {
 

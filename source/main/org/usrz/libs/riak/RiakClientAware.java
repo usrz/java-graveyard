@@ -1,3 +1,4 @@
+package org.usrz.libs.riak;
 /* ========================================================================== *
  * Copyright 2014 USRZ.com and Pier Paolo Fumagalli                           *
  * -------------------------------------------------------------------------- *
@@ -13,25 +14,9 @@
  * See the License for the specific language governing permissions and        *
  * limitations under the License.                                             *
  * ========================================================================== */
-package org.usrz.libs.riak;
 
-import org.testng.annotations.Test;
-import org.usrz.libs.testing.AbstractTest;
+public interface RiakClientAware {
 
-public class LinksMapBuilderTest extends AbstractTest {
-
-    private final RiakClient client = new FakeClient();
-
-    @Test
-    public void testHeaders() {
-        for (String header: new String[] { "</buckets/foo2/keys/bar2>; riaktag=\"secondlink\", </buckets/foo1/keys/bar1>; riaktag=\"firstlink\", </buckets/test>; rel=\"up\"",
-                                           "</buckets/foo2/keys/bar2>; riaktag=\"secondlink\", </buckets/test>; rel=\"up\", </buckets/foo1/keys/bar1>; riaktag=\"firstlink\"",
-                                           "</buckets/test>; rel=\"up\", </buckets/foo2/keys/bar2>; riaktag=\"secondlink\", </buckets/foo1/keys/bar1>; riaktag=\"firstlink\"" }) {
-            final LinksMap links = new LinksMapBuilder(client).parseHeader(header).build();
-            assertTrue(links.containsValue("firstlink",  "foo1", "bar1"),  "first not found in " + header);
-            assertTrue(links.containsValue("secondlink", "foo2", "bar2"), "second not found in " + header);
-
-        }
-    }
+    public RiakClient getRiakClient();
 
 }

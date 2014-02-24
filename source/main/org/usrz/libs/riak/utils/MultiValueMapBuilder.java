@@ -23,7 +23,7 @@ public abstract class MultiValueMapBuilder<K,
                                            M extends MultiValueMap<K, V>,
                                            B extends MultiValueMapBuilder<K, V, M, B>> {
     private final B thisInstance;
-    private final M map;
+    protected final M map;
 
     @SuppressWarnings("unchecked")
     protected MultiValueMapBuilder(M map) {

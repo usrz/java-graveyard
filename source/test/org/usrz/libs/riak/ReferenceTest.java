@@ -20,9 +20,11 @@ import org.usrz.libs.testing.AbstractTest;
 
 public class ReferenceTest extends AbstractTest {
 
+    private final RiakClient client = new FakeClient();
+
     @Test
     public void testEncoded() {
-        final Reference reference = new Reference("/buckets/dev%40usrz/keys/f%C3%BCbar");
+        final Reference reference = new Reference(client, "/buckets/dev%40usrz/keys/f%C3%BCbar");
         assertEquals(reference.getBucket(), "dev@usrz");
         assertEquals(reference.getKey(), "f\u00FCbar");
     }
@@ -37,11 +39,11 @@ public class ReferenceTest extends AbstractTest {
                                            "http://127.0.0.1:1234/riak/mybucket/mykey/",
                                            "http://127.0.0.1:1234/buckets/mybucket/keys/mykey",
                                            "http://127.0.0.1:1234/buckets/mybucket/keys/mykey/" }) {
-            final Reference reference1 = new Reference(string);
+            final Reference reference1 = new Reference(client, string);
             assertEquals(reference1.getBucket(), "mybucket");
             assertEquals(reference1.getKey(), "mykey");
 
-            final Reference reference2 = new Reference(string + "?foo=bar");
+            final Reference reference2 = new Reference(client, string + "?foo=bar");
             assertEquals(reference2.getBucket(), "mybucket");
             assertEquals(reference2.getKey(), "mykey");
         }

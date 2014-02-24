@@ -20,7 +20,6 @@ import org.usrz.libs.riak.requests.BucketedRequest;
 import org.usrz.libs.riak.requests.ConditionalRequest;
 import org.usrz.libs.riak.requests.KeyedRequest;
 import org.usrz.libs.riak.requests.ReadQuorumRequest;
-import org.usrz.libs.riak.requests.Request;
 import org.usrz.libs.riak.requests.SiblingsRequest;
 
 public interface FetchRequest<T>

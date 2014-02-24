@@ -25,12 +25,12 @@ public class LinksMapBuilder extends MultiValueMapBuilder<String, Reference, Lin
 
     private static final Pattern LINK_PATTERN = Pattern.compile("\\s*<([^>]+)>\\s*;\\s*riaktag\\s*=\\s*\"?([^\"]+)\"?\\s*");
 
-    public LinksMapBuilder() {
-        this(null);
+    public LinksMapBuilder(RiakClient client) {
+        super(new LinksMap(client));
     }
 
     public LinksMapBuilder(LinksMap map) {
-        super(map == null ? new LinksMap() : map);
+        super(map);
     }
 
     /* ====================================================================== */
@@ -40,7 +40,7 @@ public class LinksMapBuilder extends MultiValueMapBuilder<String, Reference, Lin
         while (tokenizer.hasMoreTokens()) {
             final String token = tokenizer.nextToken();
             final Matcher matcher = LINK_PATTERN.matcher(token);
-            if (matcher.matches()) add(matcher.group(2), new Reference(matcher.group(1)));
+            if (matcher.matches()) add(matcher.group(2), new Reference(map.getRiakClient(), matcher.group(1)));
         }
         return this;
     }
@@ -54,7 +54,7 @@ public class LinksMapBuilder extends MultiValueMapBuilder<String, Reference, Lin
     /* ====================================================================== */
 
     public LinksMapBuilder add(String tag, String bucket, String key) {
-        return add(tag, new Reference(bucket, key));
+        return add(tag, new Reference(map.getRiakClient(), bucket, key));
     }
 
     public LinksMapBuilder add(String tag, Bucket bucket, String key) {
@@ -62,7 +62,7 @@ public class LinksMapBuilder extends MultiValueMapBuilder<String, Reference, Lin
     }
 
     public LinksMapBuilder put(String tag, String bucket, String key) {
-        return put(tag, new Reference(bucket, key));
+        return put(tag, new Reference(map.getRiakClient(), bucket, key));
     }
 
     public LinksMapBuilder put(String tag, Bucket bucket, String key) {
@@ -70,7 +70,7 @@ public class LinksMapBuilder extends MultiValueMapBuilder<String, Reference, Lin
     }
 
     public LinksMapBuilder remove(Object tag, String bucket, String key) {
-        return remove(tag, new Reference(bucket, key));
+        return remove(tag, new Reference(map.getRiakClient(), bucket, key));
     }
 
     public LinksMapBuilder remove(Object tag, Bucket bucket, String key) {

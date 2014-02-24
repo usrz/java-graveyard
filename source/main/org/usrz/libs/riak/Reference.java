@@ -20,15 +20,18 @@ import java.util.regex.Pattern;
 
 import org.usrz.libs.riak.utils.RiakUtils;
 
-public class Reference {
+public class Reference implements RiakLocation {
 
     private static final Pattern PATTERN = Pattern.compile("(.*)/(riak|buckets)/([^/]+)/(keys/)?([^/\\?]+)([/\\?].*)?");
+    private final RiakClient client;
     private final String bucket;
     private final String key;
 
-    public Reference(String location) {
+    public Reference(RiakClient client, String location) {
+        if (client == null) throw new NullPointerException("Null client");
         final Matcher matcher = PATTERN.matcher(location);
         if (matcher.matches()) {
+            this.client = client;
             bucket = RiakUtils.decode(matcher.group(3));
             key = RiakUtils.decode(matcher.group(5));
             if (key == null) throw new NullPointerException("Null key parsing: " + location);
@@ -41,16 +44,21 @@ public class Reference {
     }
 
     public Reference(Bucket bucket, String key) {
-        this(bucket.getName(), key);
+        if (key == null) throw new NullPointerException("Null key");
+        if (key.length() == 0) throw new IllegalArgumentException("Empty key");
+
+        client = bucket.getRiakClient();
+        this.bucket = bucket.getName();
+        this.key = key;
     }
 
-    public Reference(String bucket, String key) {
-        if (bucket == null) throw new NullPointerException("Null bucket");
-        if (key == null) throw new NullPointerException("Null key");
-        if (bucket.length() == 0) throw new IllegalArgumentException("Empty bucket");
-        if (key.length() == 0) throw new IllegalArgumentException("Empty key");
-        this.bucket = bucket;
-        this.key = key;
+    public Reference(RiakClient client, String bucket, String key) {
+        this(client.getBucket(bucket), key);
+    }
+
+    @Override
+    public final RiakClient getRiakClient() {
+        return client;
     }
 
     public final String getBucket() {
@@ -61,6 +69,7 @@ public class Reference {
         return key;
     }
 
+    @Override
     public final String getLocation() {
         return "/buckets/" + RiakUtils.encode(bucket) + "/keys/" + RiakUtils.encode(key);
     }

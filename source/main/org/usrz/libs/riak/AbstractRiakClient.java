@@ -56,7 +56,7 @@ public abstract class AbstractRiakClient implements RiakClient {
             @Override
             public Reference next(long timeout, TimeUnit unit)
             throws InterruptedException, ExecutionException, TimeoutException {
-                return new Reference(bucket, future.next(timeout, unit));
+                return new Reference(AbstractRiakClient.this, bucket, future.next(timeout, unit));
             }
         };
     }

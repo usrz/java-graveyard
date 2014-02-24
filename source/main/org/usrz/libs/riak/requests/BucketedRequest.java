@@ -16,6 +16,7 @@
 package org.usrz.libs.riak.requests;
 
 import org.usrz.libs.riak.Bucket;
+import org.usrz.libs.riak.Request;
 
 public interface BucketedRequest<T, R extends BucketedRequest<T, R>>
 extends Request<T> {

@@ -19,7 +19,6 @@ import org.usrz.libs.riak.requests.BucketedRequest;
 import org.usrz.libs.riak.requests.ConditionalRequest;
 import org.usrz.libs.riak.requests.KeyedRequest;
 import org.usrz.libs.riak.requests.OptionalBodyRequest;
-import org.usrz.libs.riak.requests.Request;
 import org.usrz.libs.riak.requests.VectorClockRequest;
 import org.usrz.libs.riak.requests.WriteQuorumRequest;
 

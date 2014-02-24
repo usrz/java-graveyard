@@ -54,7 +54,7 @@ public class AsyncResponseHandler<T> implements AsyncHandler<Void> {
 
     // https://github.com/AsyncHttpClient/async-http-client/issues/489
     private final SettableFuture<Response<T>> settable = new SettableFuture<Response<T>>();
-    private final AsyncResponse<T> response = new AsyncResponse<>();
+    private final AsyncResponse<T> response;
     private final AsyncRiakClient client;
     private final Class<T> type;
     private final Request request;
@@ -64,6 +64,8 @@ public class AsyncResponseHandler<T> implements AsyncHandler<Void> {
 
     protected AsyncResponseHandler(AsyncRiakClient client, Class<T> type, Request request) {
         log.trace("Handler for %s on %s created", request.getMethod(), request.getUrl());
+        if (client == null) throw new NullPointerException("Null client");
+        this.response = new AsyncResponse<T>(client);
         this.client = client;
         this.type = type == Void.class ? null :
                     type == void.class ? null :
@@ -161,14 +163,14 @@ public class AsyncResponseHandler<T> implements AsyncHandler<Void> {
         /* Set up our reference */
         final String location = map.getFirstValue("Location");
         final URI locationUri = location == null ? headers.getUrl() : headers.getUrl().resolve(location);
-        response.setReference(new Reference(locationUri.getRawPath()));
+        response.setReference(new Reference(client, locationUri.getRawPath()));
 
         /* Set up our last modified date */
         final String lastModified = map.getFirstValue("Last-Modified");
         if (lastModified != null) response.setLastModified(parseDate(lastModified));
 
         /* Parse indexes, links and metadata */
-        response.getLinksMap().addAll(new LinksMapBuilder().parseHeaders(map.get("Link")).build());
+        response.getLinksMap().addAll(new LinksMapBuilder(client).parseHeaders(map.get("Link")).build());
         response.getIndexMap().addAll(new IndexMapBuilder().parseHeaders(map).build());
         response.getMetadata().addAll(new MetadataBuilder().parseHeaders(map).build());
 
@@ -283,7 +285,7 @@ public class AsyncResponseHandler<T> implements AsyncHandler<Void> {
 
         @Override
         public T call() throws Exception {
-            final Reference reference = new Reference(request.getRawUrl());
+            final Reference reference = new Reference(client, request.getRawUrl());
             final Scanner scanner = new Scanner(input, "UTF8");
             final Set<String> siblings = new HashSet<String>();
             try {

@@ -15,6 +15,8 @@
  * ========================================================================== */
 package org.usrz.libs.riak.requests;
 
+import org.usrz.libs.riak.Request;
+
 public interface SiblingsRequest<T, R extends SiblingsRequest<T, R>>
 extends Request<T> {
 

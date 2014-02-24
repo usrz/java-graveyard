@@ -170,8 +170,8 @@ public class AsyncRiakClientTest extends AbstractTest {
         final AnnotatedObject object = new AnnotatedObject("someValue",
                                                            new String[] { "theIndexValue1", "theIndexValue2" },
                                                            new String[] { "metadataValue1", "metadataValue2" },
-                                                           new Reference("foo1", "bar1"),
-                                                           new Reference("foo2", "bar2"));
+                                                           new Reference(client, "foo1", "bar1"),
+                                                           new Reference(client, "foo2", "bar2"));
 
         final StoreRequest<AnnotatedObject> storeRequest1 = bucket.store(object).setReturnBody(true);
         assertTrue(storeRequest1.getIndexMap().containsValue("myindex_bin", "theIndexValue1"));

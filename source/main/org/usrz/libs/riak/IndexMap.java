@@ -48,11 +48,10 @@ public class IndexMap extends MultiValueMap<Index, String> {
         final String string = value.trim();
 
         /* Check for numbers */
-        if (key.getType() == INTEGER) {
-            for (char c: string.toCharArray()) {
-                if ((c >= '0') && (c <= '9')) continue;
-                throw new IllegalArgumentException("Non-numeric value \"" + value + "\" for index " + key);
-            }
+        if (key.getType() == INTEGER) try {
+            Long.parseLong(value);
+        } catch (NumberFormatException exception) {
+            throw new IllegalArgumentException("Non-numeric value \"" + value + "\" for index " + key, exception);
         }
 
         /* Check that we *HAVE* something */

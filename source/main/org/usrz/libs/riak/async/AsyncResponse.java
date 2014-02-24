@@ -25,9 +25,9 @@ import org.usrz.libs.riak.Response;
 
 public class AsyncResponse<T> implements Response<T> {
 
-    private final Metadata metadata = new Metadata();
-    private final IndexMap indexMap = new IndexMap();
-    private final LinksMap linksMap = new LinksMap();
+    private final Metadata metadata;
+    private final IndexMap indexMap;
+    private final LinksMap linksMap;
 
     private String vectorClock;
     private Date lastModified;
@@ -35,6 +35,14 @@ public class AsyncResponse<T> implements Response<T> {
     private boolean successful;
     private int status;
     private T entity;
+
+    protected AsyncResponse(AsyncRiakClient client) {
+        if (client == null) throw new NullPointerException("Null client");
+        this.linksMap = new LinksMap(client);
+        this.indexMap = new IndexMap();
+        this.metadata = new Metadata();
+
+    }
 
     @Override
     public Metadata getMetadata() {

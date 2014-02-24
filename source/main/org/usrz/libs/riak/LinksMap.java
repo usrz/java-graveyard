@@ -17,14 +17,26 @@ package org.usrz.libs.riak;
 
 import org.usrz.libs.riak.utils.MultiValueMap;
 
-public class LinksMap extends MultiValueMap<String, Reference> {
+public class LinksMap extends MultiValueMap<String, Reference>
+implements RiakClientAware {
 
-    public LinksMap() {
-        super();
+    private final RiakClient client;
+
+    public LinksMap(RiakClient client) {
+        if (client == null) throw new NullPointerException("Null client");
+        this.client = client;
     }
 
     public LinksMap(LinksMap map) {
+        client = map.getRiakClient();
         putAll(map);
+    }
+
+    /* ====================================================================== */
+
+    @Override
+    public RiakClient getRiakClient() {
+        return client;
     }
 
     /* ====================================================================== */
@@ -48,7 +60,7 @@ public class LinksMap extends MultiValueMap<String, Reference> {
     /* ====================================================================== */
 
     public boolean add(String tag, String bucket, String key) {
-        return add(tag, new Reference(bucket, key));
+        return add(tag, new Reference(client, bucket, key));
     }
 
     public boolean add(String tag, Bucket bucket, String key) {
@@ -56,7 +68,7 @@ public class LinksMap extends MultiValueMap<String, Reference> {
     }
 
     public boolean containsValue(Object tag, String bucket, String key) {
-        return containsValue(tag, new Reference(bucket, key));
+        return containsValue(tag, new Reference(client, bucket, key));
     }
 
     public boolean containsValue(Object tag, Bucket bucket, String key) {
@@ -64,7 +76,7 @@ public class LinksMap extends MultiValueMap<String, Reference> {
     }
 
     public void put(String tag, String bucket, String key) {
-        put(tag, new Reference(bucket, key));
+        put(tag, new Reference(client, bucket, key));
     }
 
     public void put(String tag, Bucket bucket, String key) {
@@ -72,7 +84,7 @@ public class LinksMap extends MultiValueMap<String, Reference> {
     }
 
     public boolean remove(Object tag, String bucket, String key) {
-        return remove(tag, new Reference(bucket, key));
+        return remove(tag, new Reference(client, bucket, key));
     }
 
     public boolean remove(Object tag, Bucket bucket, String key) {

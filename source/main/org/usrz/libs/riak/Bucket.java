@@ -20,21 +20,33 @@ import static java.lang.Integer.toHexString;
 import java.io.IOException;
 
 import org.usrz.libs.riak.utils.IterableFuture;
+import org.usrz.libs.riak.utils.RiakUtils;
 
-public class Bucket {
+public class Bucket implements RiakLocation {
 
-    private final AbstractRiakClient client;
+    private final RiakClient client;
     private final String name;
 
-    protected Bucket(AbstractRiakClient client, String name) {
+    protected Bucket(RiakClient client, String name) {
         if (name == null) throw new NullPointerException("Null bucket name");
         if (name.length() == 0) throw new IllegalArgumentException("Empty bucket name");
+        if (client == null) throw new NullPointerException("Null client");
         this.client = client;
         this.name = name;
     }
 
     public String getName() {
         return name;
+    }
+
+    @Override
+    public RiakClient getRiakClient() {
+        return client;
+    }
+
+    @Override
+    public String getLocation() {
+        return "/buckets/" + RiakUtils.encode(name) + "/";
     }
 
     public IterableFuture<String> getKeys()

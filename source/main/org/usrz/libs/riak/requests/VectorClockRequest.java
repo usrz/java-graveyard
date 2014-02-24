@@ -15,6 +15,8 @@
  * ========================================================================== */
 package org.usrz.libs.riak.requests;
 
+import org.usrz.libs.riak.Request;
+
 public interface VectorClockRequest<T, R extends VectorClockRequest<T, R>>
 extends Request<T> {
 
