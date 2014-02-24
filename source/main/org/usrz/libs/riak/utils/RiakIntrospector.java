@@ -25,6 +25,7 @@ import java.util.Set;
 
 import org.usrz.libs.riak.Bucket;
 import org.usrz.libs.riak.IndexMap;
+import org.usrz.libs.riak.IndexType;
 import org.usrz.libs.riak.LinksMap;
 import org.usrz.libs.riak.Metadata;
 import org.usrz.libs.riak.Reference;
@@ -124,7 +125,14 @@ public class RiakIntrospector {
             for (IntrospectedProperty<T> property: entry.getValue()) {
                 if (property.canRead()) {
                     final String field = "".equals(annotation.value()) ? property.getName() : annotation.value();
-                    if ((field == null) || ("".equals(field))) throw new IllegalStateException("Metadata field unknown reading " + property);
+
+                    if ((field == null) || ("".equals(field))) try {
+                        final Metadata map = property.read(instance, Metadata.class);
+                        if (map != null) metadata.addAll(map);
+                        continue;
+                    } catch (IntrospectionException exception) {
+                        throw new IllegalStateException("Unnamed @RiakMetadata annotation should return a Metadata for" + property, exception);
+                    }
 
                     /* All values, one by one */
                     for (Object object: combine(property.readAll(instance))) {
@@ -152,15 +160,25 @@ public class RiakIntrospector {
                                                 property.getName() :
                                                 annotation.value() :
                                             annotation.name();
-                    if ((name == null) || ("".equals(name))) throw new IllegalStateException("Index name unknown reading " + property);
+
+                    if ((name == null) || ("".equals(name))) try {
+                        final IndexMap map = property.read(instance, IndexMap.class);
+                        if (map != null) indexMap.addAll(map);
+                        continue;
+                    } catch (IntrospectionException exception) {
+                        throw new IllegalStateException("Unnamed @RiakIndex annotation should return an IndexMap for" + property, exception);
+                    }
 
                     for (Object object: combine(property.readAll(instance))) {
+                        final IndexType type;
                         switch (annotation.type()) {
-                            case AUTODETECT: indexMap.add(name, object instanceof Number ? INTEGER : BINARY,  object.toString()); break;
-                            case INTEGER:    indexMap.add(name, INTEGER, object.toString()); break;
-                            case BINARY:     indexMap.add(name, BINARY,  object.toString()); break;
+                            case AUTODETECT: type = object instanceof Number ? INTEGER : BINARY; break;
+                            case INTEGER:    type = INTEGER; break;
+                            case BINARY:     type = BINARY;  break;
                             default: throw new IllegalStateException("Unsupported index type " + annotation.type() + " reading " + property);
                         }
+
+                        indexMap.add(name, type, object.toString());
                     }
                 }
             }
@@ -180,7 +198,13 @@ public class RiakIntrospector {
 
                     /* Get the link tag */
                     final String tag = "".equals(annotation.value()) ? property.getName() : annotation.value();
-                    if ((tag == null) || ("".equals(tag))) throw new IllegalStateException("Link tag unknown reading " + property);
+                    if ((tag == null) || ("".equals(tag))) try {
+                        final LinksMap map = property.read(instance, LinksMap.class);
+                        if (map != null) linksMap.addAll(map);
+                        continue;
+                    } catch (IntrospectionException exception) {
+                        throw new IllegalStateException("Unnamed @RiakLink annotation should return a LinksMap for" + property, exception);
+                    }
 
                     /* Get the reference and add our link */
                     for (Object link: combine(property.readAll(instance))) {
