@@ -16,10 +16,16 @@
 package org.usrz.libs.riak;
 
 import org.testng.annotations.Test;
-import org.usrz.libs.riak.Reference;
 import org.usrz.libs.testing.AbstractTest;
 
 public class ReferenceTest extends AbstractTest {
+
+    @Test
+    public void testEncoded() {
+        final Reference reference = new Reference("/buckets/dev%40usrz/keys/f%C3%BCbar");
+        assertEquals(reference.getBucket(), "dev@usrz");
+        assertEquals(reference.getKey(), "f\u00FCbar");
+    }
 
     @Test
     public void testReferences() {
@@ -38,6 +44,6 @@ public class ReferenceTest extends AbstractTest {
             final Reference reference2 = new Reference(string + "?foo=bar");
             assertEquals(reference2.getBucket(), "mybucket");
             assertEquals(reference2.getKey(), "mykey");
-}
+        }
     }
 }

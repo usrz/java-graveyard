@@ -60,7 +60,7 @@ public class AsyncRiakClientTest extends AbstractTest {
         final Future<Response<TestObject>> future2 = bucket.store(object, response.getReference().getKey()).execute();
         final Response<TestObject> response2 = future2.get();
 
-        final Future<Response<Void>> delete = bucket.delete(response.getReference().getKey()).execute();
+        final Future<Response<Void>> delete = bucket.delete(response2.getReference().getKey()).execute();
         final Response<Void> deleteResponse = delete.get();
 
 

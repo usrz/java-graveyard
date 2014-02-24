@@ -20,35 +20,38 @@ import static org.usrz.libs.riak.IndexType.INTEGER;
 
 import org.testng.annotations.Test;
 import org.usrz.libs.logging.Log;
-import org.usrz.libs.riak.Index;
-import org.usrz.libs.riak.IndexType;
 import org.usrz.libs.testing.AbstractTest;
 
-public class IndexTypeTest extends AbstractTest {
+public class IndexTest extends AbstractTest {
 
     private final Log log = new Log();
 
     @Test
     public void testIndexType() {
-        final Index e1 = IndexType.parseHeaderName("X-Riak-Index-MyField_bin");
+        final Index e1 = new Index("X-Riak-Index-MyField_bin");
         assertEquals(e1.getName(), "myfield");
         assertEquals(e1.getType(), BINARY);
 
-        final Index e2 = IndexType.parseHeaderName("x-riak-index-AnotherField_int");
+        final Index e2 = new Index("x-riak-index-AnotherField_int");
         assertEquals(e2.getName(), "anotherfield");
         assertEquals(e2.getType(), INTEGER);
 
-        final Index e3 = IndexType.parseHeaderName("YetAnotherField_bin");
+        final Index e3 = new Index("YetAnotherField_bin");
         assertEquals(e3.getName(), "yetanotherfield");
         assertEquals(e3.getType(), BINARY);
 
-        final Index e4 = IndexType.parseHeaderName("AndToFinishTheField_int");
+        final Index e4 = new Index("AndToFinishTheField_int");
         assertEquals(e4.getName(), "andtofinishthefield");
         assertEquals(e4.getType(), INTEGER);
 
+        final Index e5 = new Index("x-riak-index-f%C3%BC%40bar_bin");
+        assertEquals(e5.getName(), "f\u00FC@bar");
+        assertEquals(e5.getType(), BINARY);
+
+
         for (String header: new String[] { "X-Riak-Index-Foo_bar", "foo_bar",
                                            "X-Riak-Index-_bin", "_num" }) try {
-            IndexType.parseHeaderName(header);
+            new Index(header);
             fail("The header \"" + header + "\" should fail");
         } catch (IllegalArgumentException exception) {
             log.trace("The header \"%s\" failed as expected", header);
