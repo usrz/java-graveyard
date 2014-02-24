@@ -23,22 +23,16 @@ import java.util.Arrays;
 import java.util.Collection;
 
 import org.testng.annotations.Test;
+import org.usrz.libs.riak.FakeClient;
 import org.usrz.libs.riak.IndexMap;
 import org.usrz.libs.riak.LinksMap;
 import org.usrz.libs.riak.Metadata;
 import org.usrz.libs.riak.Reference;
-import org.usrz.libs.riak.annotations.RiakBucket;
-import org.usrz.libs.riak.annotations.RiakIndex;
-import org.usrz.libs.riak.annotations.RiakKey;
-import org.usrz.libs.riak.annotations.RiakLink;
-import org.usrz.libs.riak.annotations.RiakMetadata;
 import org.usrz.libs.testing.AbstractTest;
-import org.usrz.libs.utils.beans.Introspector;
 
 public class RiakIntrospectorTest extends AbstractTest {
 
-    private final Introspector i = new Introspector();
-    private final RiakIntrospector introspector = new RiakIntrospector(i);
+    private final RiakIntrospector introspector = new RiakIntrospector(new FakeClient());
 
     @Test
     public void testEmptyObject() {
@@ -112,6 +106,8 @@ public class RiakIntrospectorTest extends AbstractTest {
 
 
     }
+
+    /* ====================================================================== */
 
     private class IntrospectableObject {
 

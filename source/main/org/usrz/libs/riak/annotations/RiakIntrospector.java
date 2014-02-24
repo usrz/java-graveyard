@@ -29,6 +29,7 @@ import org.usrz.libs.riak.IndexType;
 import org.usrz.libs.riak.LinksMap;
 import org.usrz.libs.riak.Metadata;
 import org.usrz.libs.riak.Reference;
+import org.usrz.libs.riak.RiakClient;
 import org.usrz.libs.utils.beans.IntrospectedProperty;
 import org.usrz.libs.utils.beans.IntrospectionDescriptor;
 import org.usrz.libs.utils.beans.IntrospectionException;
@@ -37,14 +38,17 @@ import org.usrz.libs.utils.beans.Introspector;
 public class RiakIntrospector {
 
     private final Introspector introspector;
+    private final RiakClient client;
 
-    public RiakIntrospector() {
-        this (new Introspector());
+    public RiakIntrospector(RiakClient client) {
+        this (client, new Introspector());
     }
 
-    public RiakIntrospector(Introspector introspector) {
+    public RiakIntrospector(RiakClient client, Introspector introspector) {
         if (introspector == null) throw new NullPointerException("Null introspector");
+        if (client == null) throw new NullPointerException("Null client");
         this.introspector = introspector;
+        this.client = client;
     }
 
     /* ====================================================================== */
@@ -157,7 +161,11 @@ public class RiakIntrospector {
 
                     /* All values, one by one */
                     for (Object object: combine(property.readAll(instance))) {
-                        metadata.add(field, object.toString());
+                        if (object instanceof Metadata) {
+                            metadata.addAll((Metadata) object);
+                        } else {
+                            metadata.add(field, object.toString());
+                        }
                     }
                 }
             }
@@ -193,7 +201,11 @@ public class RiakIntrospector {
                             default: throw new IllegalStateException("Unsupported index type " + annotation.type() + " reading " + property);
                         }
 
-                        indexMap.add(name, type, object.toString());
+                        if (object instanceof IndexMap) {
+                            indexMap.addAll((IndexMap) object);
+                        } else {
+                            indexMap.add(name, type, object.toString());
+                        }
                     }
                 }
             }
@@ -223,7 +235,9 @@ public class RiakIntrospector {
 
                     /* Get the reference and add our link */
                     for (Object link: combine(property.readAll(instance))) {
-                        if (link instanceof Reference) {
+                        if (link instanceof LinksMap) {
+                            linksMap.addAll((LinksMap) link);
+                        } else if (link instanceof Reference) {
                             linksMap.add(tag, (Reference) link);
                         } else if (link instanceof String) {
                             linksMap.add(tag, new Reference((String) link));
@@ -240,11 +254,11 @@ public class RiakIntrospector {
 
     /* ====================================================================== */
 
-    public RiakIntrospector setKey(Object instance, String key) {
-        final IntrospectionDescriptor<Object> descriptor = descriptor(instance);
+    public <T> RiakIntrospector setKey(T instance, String key) {
+        final IntrospectionDescriptor<T> descriptor = descriptor(instance);
 
-        for (Entry<RiakKey, Set<IntrospectedProperty<Object>>> entry: descriptor.getProperties(RiakKey.class).entrySet()) {
-            for (IntrospectedProperty<Object> property: entry.getValue()) {
+        for (Entry<RiakKey, Set<IntrospectedProperty<T>>> entry: descriptor.getProperties(RiakKey.class).entrySet()) {
+            for (IntrospectedProperty<T> property: entry.getValue()) {
                 if (property.canWrite()) property.write(instance, key);
             }
         }
@@ -257,7 +271,11 @@ public class RiakIntrospector {
 
         for (Entry<RiakBucket, Set<IntrospectedProperty<T>>> entry: descriptor.getProperties(RiakBucket.class).entrySet()) {
             for (IntrospectedProperty<T> property: entry.getValue()) {
-                if (property.canWrite()) property.write(instance, bucket);
+                if (property.canWrite()) try {
+                    property.write(instance, client.getBucket(bucket));
+                } catch (IntrospectionException exception) {
+                    property.write(instance, bucket);
+                }
             }
         }
 

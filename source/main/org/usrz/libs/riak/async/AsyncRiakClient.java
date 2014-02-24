@@ -53,7 +53,7 @@ public class AsyncRiakClient extends AbstractRiakClient {
     private final Log log = new Log();
 
     private final ExecutorService executor = Executors.newCachedThreadPool();
-    private final RiakIntrospector introspector = new RiakIntrospector();
+    private final RiakIntrospector introspector = new RiakIntrospector(this);
     private final ObjectMapper mapper = new ObjectMapper();
     private final AsyncHttpClient client;
 
