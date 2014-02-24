@@ -16,10 +16,10 @@
 package org.usrz.libs.riak;
 
 public abstract class AbstractDeleteRequest
-extends AbstractRequest<Void, DeleteRequest>
+extends AbstractBucketRequest<Void, DeleteRequest>
 implements DeleteRequest {
 
-    protected AbstractDeleteRequest(String bucket, String key) {
+    protected AbstractDeleteRequest(Bucket bucket, String key) {
         super(bucket, key);
         if (key == null) throw new NullPointerException("Null key");
         if (key.length() == 0) throw new NullPointerException("Empty key");

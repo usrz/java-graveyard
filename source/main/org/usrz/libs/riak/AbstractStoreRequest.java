@@ -21,7 +21,7 @@ import java.util.concurrent.Future;
 import org.usrz.libs.riak.annotations.RiakIntrospector;
 
 public abstract class AbstractStoreRequest<T>
-extends AbstractRequest<T, StoreRequest<T>>
+extends AbstractBucketRequest<T, StoreRequest<T>>
 implements StoreRequest<T> {
 
     private final Metadata metadata;
@@ -29,7 +29,7 @@ implements StoreRequest<T> {
     private final LinksMap linksMap;
     private final T instance;
 
-    protected AbstractStoreRequest(String bucket, T instance, RiakIntrospector introspector) {
+    protected AbstractStoreRequest(Bucket bucket, T instance, RiakIntrospector introspector) {
         super(bucket, introspector.getKey(instance));
         this.metadata = introspector.getMetadata(instance);
         this.indexMap = introspector.getIndexMap(instance);

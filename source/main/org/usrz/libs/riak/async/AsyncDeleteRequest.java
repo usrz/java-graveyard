@@ -29,7 +29,7 @@ implements Mapper {
     private final AsyncRiakClient client;
 
     protected AsyncDeleteRequest(AsyncRiakClient client, String bucket, String key) {
-        super(bucket, key);
+        super(client.getBucket(bucket), key);
         this.client = client;
     }
 

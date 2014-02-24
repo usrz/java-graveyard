@@ -29,7 +29,7 @@ implements Mapper {
     private final AsyncRiakClient client;
 
     protected AsyncFetchRequest(AsyncRiakClient client, String bucket, String key, Class<T> type) {
-        super(bucket, key, type);
+        super(client.getBucket(bucket), key, type);
         this.client = client;
     }
 

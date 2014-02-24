@@ -19,12 +19,12 @@ import java.io.IOException;
 import java.util.concurrent.Future;
 
 public abstract class AbstractFetchRequest<T>
-extends AbstractRequest<T, FetchRequest<T>>
+extends AbstractBucketRequest<T, FetchRequest<T>>
 implements FetchRequest<T> {
 
     private final Class<T> type;
 
-    protected AbstractFetchRequest(String bucket, String key, Class<T> type) {
+    protected AbstractFetchRequest(Bucket bucket, String key, Class<T> type) {
         super(bucket, key);
         if (key == null) throw new NullPointerException("Null key");
         if (key.length() == 0) throw new NullPointerException("Empty key");

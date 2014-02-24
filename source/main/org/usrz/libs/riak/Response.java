@@ -17,7 +17,7 @@ package org.usrz.libs.riak;
 
 import java.util.Date;
 
-public interface Response<T> {
+public interface Response<T> extends RiakClientAware {
 
     public String getVectorClock();
 

@@ -21,19 +21,18 @@ import java.util.concurrent.Future;
 import org.usrz.libs.riak.requests.BucketedRequest;
 import org.usrz.libs.riak.requests.KeyedRequest;
 
-public abstract class AbstractRequest<T, R extends Request<T>
+public abstract class AbstractBucketRequest<T, R extends Request<T>
                                                  & KeyedRequest<T, R>
                                                  & BucketedRequest<T,R>>
 implements Request<T>, KeyedRequest<T, R>, BucketedRequest<T, R> {
 
     private final R thisInstance;
-    private String bucket;
+    private Bucket bucket;
     private String key;
 
     @SuppressWarnings("unchecked")
-    protected AbstractRequest(String bucket, String key) {
-        if (bucket == null) throw new NullPointerException("Null bucket name");
-        if (bucket.length() == 0) throw new NullPointerException("Empty bucket name");
+    protected AbstractBucketRequest(Bucket bucket, String key) {
+        if (bucket == null) throw new NullPointerException("Null bucket");
         thisInstance = (R) this;
         this.bucket = bucket;
         this.key = key;
@@ -42,9 +41,14 @@ implements Request<T>, KeyedRequest<T, R>, BucketedRequest<T, R> {
     /* ====================================================================== */
 
     @Override
+    public final RiakClient getRiakClient() {
+        return bucket.getRiakClient();
+    }
+
+    @Override
     public final Future<Response<T>> execute()
     throws IOException {
-        return this.execute(bucket, key);
+        return this.execute(bucket.getName(), key);
     }
 
     protected abstract Future<Response<T>> execute(String bucket, String key)
@@ -61,14 +65,14 @@ implements Request<T>, KeyedRequest<T, R>, BucketedRequest<T, R> {
     @Override
     public final R setBucket(String bucket) {
         if (bucket == null) throw new NullPointerException("Null bucket");
-        this.bucket = bucket;
+        this.bucket = this.bucket.getRiakClient().getBucket(bucket);
         return thisInstance;
     }
 
     @Override
     public final R setBucket(Bucket bucket) {
         if (bucket == null) throw new NullPointerException("Null bucket");
-        this.bucket = bucket.getName();
+        this.bucket = bucket;
         return thisInstance;
     }
 

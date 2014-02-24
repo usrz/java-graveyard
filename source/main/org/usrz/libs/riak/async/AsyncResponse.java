@@ -25,6 +25,7 @@ import org.usrz.libs.riak.Response;
 
 public class AsyncResponse<T> implements Response<T> {
 
+    private final AsyncRiakClient client;
     private final Metadata metadata;
     private final IndexMap indexMap;
     private final LinksMap linksMap;
@@ -41,7 +42,13 @@ public class AsyncResponse<T> implements Response<T> {
         this.linksMap = new LinksMap(client);
         this.indexMap = new IndexMap();
         this.metadata = new Metadata();
+        this.client = client;
 
+    }
+
+    @Override
+    public AsyncRiakClient getRiakClient() {
+        return client;
     }
 
     @Override

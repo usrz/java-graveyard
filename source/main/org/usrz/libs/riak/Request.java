@@ -18,7 +18,7 @@ package org.usrz.libs.riak;
 import java.io.IOException;
 import java.util.concurrent.Future;
 
-public interface Request<T> {
+public interface Request<T> extends RiakClientAware {
 
     public Future<Response<T>> execute()
     throws IOException;
