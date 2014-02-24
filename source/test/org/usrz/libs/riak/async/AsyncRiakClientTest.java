@@ -15,6 +15,8 @@
  * ========================================================================== */
 package org.usrz.libs.riak.async;
 
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.concurrent.Future;
 
 import org.testng.annotations.Test;
@@ -23,8 +25,13 @@ import org.usrz.libs.riak.Bucket;
 import org.usrz.libs.riak.Reference;
 import org.usrz.libs.riak.Response;
 import org.usrz.libs.riak.RiakClient;
+import org.usrz.libs.riak.StoreRequest;
+import org.usrz.libs.riak.annotations.RiakIndex;
+import org.usrz.libs.riak.annotations.RiakLink;
+import org.usrz.libs.riak.annotations.RiakMetadata;
 import org.usrz.libs.testing.AbstractTest;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.ning.http.client.AsyncHttpClient;
 
 public class AsyncRiakClientTest extends AbstractTest {
@@ -120,6 +127,8 @@ public class AsyncRiakClientTest extends AbstractTest {
         assertNull(deleteResponse2.getReference());
     }
 
+    /* ====================================================================== */
+
     public static class TestObject {
 
         private String value;
@@ -147,6 +156,130 @@ public class AsyncRiakClientTest extends AbstractTest {
         @Override
         public String toString() {
             return this.getClass().getSimpleName() + "[" + value + "]@" + Integer.toHexString(hashCode());
+        }
+    }
+
+    /* ====================================================================== */
+
+    @Test
+    public void testAnnotations()
+    throws Exception {
+        final RiakClient client = new AsyncRiakClient(new AsyncHttpClient());
+        final Bucket bucket = client.getBucket("test");
+
+        final AnnotatedObject object = new AnnotatedObject("someValue",
+                                                           new String[] { "theIndexValue1", "theIndexValue2" },
+                                                           new String[] { "metadataValue1", "metadataValue2" },
+                                                           new Reference("foo1", "bar1"),
+                                                           new Reference("foo2", "bar2"));
+
+        final StoreRequest<AnnotatedObject> storeRequest1 = bucket.store(object).setReturnBody(true);
+        assertTrue(storeRequest1.getIndexMap().containsValue("myindex_bin", "theIndexValue1"));
+        assertTrue(storeRequest1.getIndexMap().containsValue("myindex_bin", "theIndexValue2"));
+        assertTrue(storeRequest1.getMetadata().containsValue("mymetadata",  "metadataValue1"));
+        assertTrue(storeRequest1.getMetadata().containsValue("mymetadata",  "metadataValue2"));
+
+        final Response<AnnotatedObject> storeResponse1 = storeRequest1.execute().get();
+        assertTrue(storeResponse1.getIndexMap().containsValue("myindex_bin", "theIndexValue1"));
+        assertTrue(storeResponse1.getIndexMap().containsValue("myindex_bin", "theIndexValue2"));
+        assertTrue(storeResponse1.getMetadata().containsValue("mymetadata",  "metadataValue1"));
+        assertTrue(storeResponse1.getMetadata().containsValue("mymetadata",  "metadataValue2"));
+
+
+        final StoreRequest<AnnotatedObject> storeRequest2 = bucket.store(object).setReturnBody(false);
+        assertTrue(storeRequest2.getIndexMap().containsValue("myindex_bin", "theIndexValue1"));
+        assertTrue(storeRequest2.getIndexMap().containsValue("myindex_bin", "theIndexValue2"));
+        assertTrue(storeRequest2.getMetadata().containsValue("mymetadata",  "metadataValue1"));
+        assertTrue(storeRequest2.getMetadata().containsValue("mymetadata",  "metadataValue2"));
+
+        final Response<AnnotatedObject> storeResponse2 = storeRequest2.execute().get();
+        assertTrue(storeResponse2.getIndexMap().isEmpty());
+        assertTrue(storeResponse2.getMetadata().isEmpty());
+
+
+        client.delete(storeResponse1.getReference()).execute().get();
+        client.delete(storeResponse2.getReference()).execute().get();
+
+    }
+
+    /* ====================================================================== */
+
+    public static class AnnotatedObject extends TestObject {
+
+        private Collection<String> myIndex;
+        private Collection<String> myMetadata;
+        private Reference firstLink;
+        private Reference secondLink;
+
+        public AnnotatedObject() {
+            super();
+        }
+
+        private AnnotatedObject(String value, String[] index, String[] metadata,
+                                Reference firstLink, Reference secondLink) {
+            setValue(value);
+            setMyIndex(Arrays.asList(index));
+            setMyMetadata(Arrays.asList(metadata));
+            setFirstLink(firstLink);
+            setSecondLink(secondLink);
+        }
+
+        @RiakIndex
+        public Collection<String> getMyIndex() {
+            return myIndex;
+        }
+
+        @RiakIndex
+        public void setMyIndex(Collection<String> myIndex) {
+            this.myIndex = myIndex;
+        }
+
+        @RiakMetadata
+        public Collection<String> getMyMetadata() {
+            return myMetadata;
+        }
+
+        @RiakMetadata
+        public void setMyMetadata(Collection<String> myMetadata) {
+            this.myMetadata = myMetadata;
+        }
+
+        @RiakLink @JsonIgnore
+        public Reference getFirstLink() {
+            return firstLink;
+        }
+
+        @RiakLink @JsonIgnore
+        public void setFirstLink(Reference firstLink) {
+            this.firstLink = firstLink;
+        }
+
+        @RiakLink @JsonIgnore
+        public Reference getSecondLink() {
+            return secondLink;
+        }
+
+        @RiakLink @JsonIgnore
+        public void setSecondLink(Reference secondLink) {
+            this.secondLink = secondLink;
+        }
+
+        @Override
+        public boolean equals(Object object) {
+            if (object == this) return true;
+            if (object == null) return false;
+            if (super.equals(object)) try {
+                final AnnotatedObject annotated = ((AnnotatedObject) object);
+                return annotated.myIndex == null ? myIndex == null : annotated.myIndex.equals(myIndex);
+            } catch (ClassCastException exception) {
+                /* Just return false below */
+            }
+            return false;
+        }
+
+        @Override
+        public String toString() {
+            return this.getClass().getSimpleName() + "[val=" + getValue() + ",idx=" + myIndex + "]@" + Integer.toHexString(hashCode());
         }
     }
 }
