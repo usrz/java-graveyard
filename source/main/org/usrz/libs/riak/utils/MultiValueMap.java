@@ -27,8 +27,7 @@ import java.util.Map;
 import java.util.Set;
 
 public abstract class MultiValueMap<K, V>
-extends AbstractMap<K, Set<V>>
-implements Cloneable {
+extends AbstractMap<K, Set<V>> {
 
     private final Map<K, Set<V>> delegates = new HashMap<>();
 
@@ -49,19 +48,6 @@ implements Cloneable {
     protected abstract K validateKey(K key);
 
     protected abstract V validateValue(K key, V value);
-
-    @Override
-    protected MultiValueMap<K, V> clone() {
-        try {
-            @SuppressWarnings("unchecked")
-            final MultiValueMap<K, V> map = (MultiValueMap<K, V>) super.clone();
-            map.clear();
-            map.putAll(this);
-            return map;
-        } catch (CloneNotSupportedException exception) {
-            throw new IllegalStateException("Exception cloning", exception);
-        }
-    }
 
     /* ====================================================================== */
 
@@ -151,7 +137,6 @@ implements Cloneable {
 
     @Override
     public final void putAll(Map<? extends K, ? extends Set<V>> map) {
-
         /* Do not check keys/values if we're on the same class */
         if (this.getClass().equals(map.getClass())) {
             @SuppressWarnings("unchecked")

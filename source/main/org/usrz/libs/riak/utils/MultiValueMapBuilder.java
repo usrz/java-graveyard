@@ -32,9 +32,8 @@ public abstract class MultiValueMapBuilder<K,
         this.map = map;
     }
 
-    @SuppressWarnings("unchecked")
     public M build() {
-        return (M) map.clone();
+        return map;
     }
 
     public final B clear() {
