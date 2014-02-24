@@ -15,6 +15,8 @@
  * ========================================================================== */
 package org.usrz.libs.riak.async;
 
+import static com.ning.http.util.DateUtil.parseDate;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -152,7 +154,14 @@ public class AsyncResponseHandler<T> implements AsyncHandler<Void> {
         final URI locationUri = location == null ? headers.getUrl() : headers.getUrl().resolve(location);
         response.setReference(new Reference(locationUri.getRawPath()));
 
-        /* TODO, do magic with headers! */
+        /* Set up our last modified date */
+        final String lastModified = map.getFirstValue("Last-Modified");
+        if (lastModified != null) response.setLastModified(parseDate(lastModified));
+
+        /* Get the vector clock */
+        response.setVectorClock(map.getFirstValue("X-Riak-Vclock"));
+
+        // TODO: parse metadata, links and indexes...
 
         /* Continue! */
         return STATE.CONTINUE;
