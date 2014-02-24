@@ -18,7 +18,7 @@ package org.usrz.libs.riak;
 import java.io.IOException;
 import java.util.concurrent.Future;
 
-import org.usrz.libs.riak.utils.RiakIntrospector;
+import org.usrz.libs.riak.annotations.RiakIntrospector;
 
 public abstract class AbstractStoreRequest<T>
 extends AbstractRequest<T, StoreRequest<T>>

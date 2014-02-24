@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and        *
  * limitations under the License.                                             *
  * ========================================================================== */
-package org.usrz.libs.riak.utils;
+package org.usrz.libs.riak.annotations;
 
 import static org.usrz.libs.riak.IndexType.BINARY;
 import static org.usrz.libs.riak.IndexType.INTEGER;
@@ -29,11 +29,6 @@ import org.usrz.libs.riak.IndexType;
 import org.usrz.libs.riak.LinksMap;
 import org.usrz.libs.riak.Metadata;
 import org.usrz.libs.riak.Reference;
-import org.usrz.libs.riak.annotations.RiakBucket;
-import org.usrz.libs.riak.annotations.RiakIndex;
-import org.usrz.libs.riak.annotations.RiakKey;
-import org.usrz.libs.riak.annotations.RiakLink;
-import org.usrz.libs.riak.annotations.RiakMetadata;
 import org.usrz.libs.utils.beans.IntrospectedProperty;
 import org.usrz.libs.utils.beans.IntrospectionDescriptor;
 import org.usrz.libs.utils.beans.IntrospectionException;
