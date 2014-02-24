@@ -78,8 +78,16 @@ public class IndexMap extends MultiValueMap<Index, String> {
         return add(new Index(name, type), value);
     }
 
+    public boolean containsKey(String index) {
+        return containsKey(new Index(index));
+    }
+
     public boolean containsKey(String name, IndexType type) {
         return containsKey(new Index(name, type));
+    }
+
+    public boolean containsValue(String index, String value) {
+        return containsValue(new Index(index), value);
     }
 
     public boolean containsValue(String name, IndexType type, Object value) {
