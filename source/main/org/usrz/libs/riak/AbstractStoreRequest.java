@@ -37,6 +37,14 @@ implements StoreRequest<T> {
         this.instance = instance;
     }
 
+    protected AbstractStoreRequest(Key key, T instance, RiakIntrospector introspector) {
+        super(key.getBucket(), key.getName());
+        this.metadata = introspector.getMetadata(instance);
+        this.indexMap = introspector.getIndexMap(instance);
+        this.linksMap = introspector.getLinksMap(instance);
+        this.instance = instance;
+    }
+
     /* ====================================================================== */
 
     @Override

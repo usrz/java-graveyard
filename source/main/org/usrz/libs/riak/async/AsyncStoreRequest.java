@@ -19,6 +19,8 @@ import java.io.IOException;
 import java.util.concurrent.Future;
 
 import org.usrz.libs.riak.AbstractStoreRequest;
+import org.usrz.libs.riak.Bucket;
+import org.usrz.libs.riak.Key;
 import org.usrz.libs.riak.Response;
 import org.usrz.libs.utils.beans.Mapper;
 
@@ -28,8 +30,13 @@ implements Mapper {
 
     private final AsyncRiakClient client;
 
-    protected AsyncStoreRequest(AsyncRiakClient client, String bucket, T instance) {
-        super(client.getBucket(bucket), instance, client.getIntrospector());
+    protected AsyncStoreRequest(AsyncRiakClient client, Key key, T instance) {
+        super(key, instance, client.getIntrospector());
+        this.client = client;
+    }
+
+    protected AsyncStoreRequest(AsyncRiakClient client, Bucket bucket, T instance) {
+        super(bucket, instance, client.getIntrospector());
         this.client = client;
     }
 

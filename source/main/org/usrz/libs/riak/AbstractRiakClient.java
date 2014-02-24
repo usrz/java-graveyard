@@ -26,81 +26,112 @@ import org.usrz.libs.riak.utils.WrappingIterableFuture;
 public abstract class AbstractRiakClient implements RiakClient {
 
     @Override
-    public Bucket getBucket(String name) {
+    public final Bucket getBucket(String name) {
         return new Bucket(this, name);
-    }
-
-    @Override
-    public IterableFuture<Bucket> getBuckets()
-    throws IOException {
-        return new WrappingIterableFuture<Bucket, String>(getBucketNames()) {
-            @Override
-            public Bucket next(long timeout, TimeUnit unit)
-            throws InterruptedException, ExecutionException, TimeoutException {
-                return getBucket(future.next(timeout, unit));
-            }
-        };
-    }
-
-    @Override
-    public IterableFuture<String> getKeyNames(Bucket bucket)
-    throws IOException {
-        return this.getKeyNames(bucket.getName());
-    }
-
-    @Override
-    public IterableFuture<Key> getKeys(final String bucket)
-    throws IOException {
-        return new WrappingIterableFuture<Key, String>(this.getKeyNames(bucket)) {
-            @Override
-            public Key next(long timeout, TimeUnit unit)
-            throws InterruptedException, ExecutionException, TimeoutException {
-                return new Key(AbstractRiakClient.this, bucket, future.next(timeout, unit));
-            }
-        };
-    }
-
-    @Override
-    public IterableFuture<Key> getKeys(Bucket bucket)
-    throws IOException {
-        return this.getKeys(bucket.getName());
     }
 
     /* ====================================================================== */
 
     @Override
-    public <T> FetchRequest<T> fetch(Bucket bucket, String key, Class<T> type) {
-        return this.fetch(bucket.getName(), key, type);
+    public abstract IterableFuture<Bucket> getBuckets()
+    throws IOException;
+
+    @Override
+    public final IterableFuture<String> getBucketNames()
+    throws IOException {
+        return new WrappingIterableFuture<String, Bucket>(getBuckets()) {
+            @Override
+            public String next(long timeout, TimeUnit unit)
+            throws InterruptedException, ExecutionException, TimeoutException {
+                return future.next(timeout, unit).getName();
+            }
+        };
+    }
+
+    /* ====================================================================== */
+
+    @Override
+    public abstract IterableFuture<Key> getKeys(Bucket bucket)
+    throws IOException;
+
+    @Override
+    public final IterableFuture<Key> getKeys(final String bucket)
+    throws IOException {
+        return getKeys(getBucket(bucket));
     }
 
     @Override
-    public <T> FetchRequest<T> fetch(Key key, Class<T> type) {
-        return this.fetch(key.getBucketName(), key.getName(), type);
+    public final IterableFuture<String> getKeyNames(Bucket bucket)
+    throws IOException {
+        return new WrappingIterableFuture<String, Key>(this.getKeys(bucket)) {
+            @Override
+            public String next(long timeout, TimeUnit unit)
+            throws InterruptedException, ExecutionException, TimeoutException {
+                return future.next(timeout, unit).getName();
+            }
+        };
     }
 
     @Override
-    public <T> StoreRequest<T> store(Bucket bucket, T object) {
-        return this.store(bucket.getName(), object);
+    public final IterableFuture<String> getKeyNames(String bucket)
+    throws IOException {
+        return getKeyNames(getBucket(bucket));
+    }
+
+    /* ====================================================================== */
+
+    @Override
+    public abstract <T> FetchRequest<T> fetch(Key key, Class<T> type);
+
+    @Override
+    public final <T> FetchRequest<T> fetch(Bucket bucket, String key, Class<T> type) {
+        return this.fetch(new Key(bucket, key), type);
     }
 
     @Override
-    public <T> StoreRequest<T> store(Bucket bucket, String key, T object) {
-        return this.store(bucket.getName(), key, object);
+    public final <T> FetchRequest<T> fetch(String bucket, String key, Class<T> type) {
+        return this.fetch(getBucket(bucket), key, type);
+    }
+
+    /* ====================================================================== */
+
+    @Override
+    public abstract <T> StoreRequest<T> store(Bucket bucket, T object);
+
+    @Override
+    public final <T> StoreRequest<T> store(String bucket, T object) {
+        return this.store(getBucket(bucket), object);
+    }
+
+    /* ---------------------------------------------------------------------- */
+
+    @Override
+    public abstract <T> StoreRequest<T> store(Key key, T object);
+
+
+    @Override
+    public final <T> StoreRequest<T> store(Bucket bucket, String key, T object) {
+        return this.store(new Key(bucket, key), object);
     }
 
     @Override
-    public <T> StoreRequest<T> store(Key key, T object) {
-        return this.store(key.getBucketName(), key.getName(), object);
+    public final <T> StoreRequest<T> store(String bucket, String key, T object) {
+        return this.store(getBucket(bucket), key, object);
+    }
+
+    /* ====================================================================== */
+
+    @Override
+    public abstract DeleteRequest delete(Key key);
+
+    @Override
+    public final DeleteRequest delete(Bucket bucket, String key) {
+        return this.delete(new Key(bucket, key));
     }
 
     @Override
-    public DeleteRequest delete(Bucket bucket, String key) {
-        return this.delete(bucket.getName(), key);
-    }
-
-    @Override
-    public DeleteRequest delete(Key key) {
-        return this.delete(key.getBucketName(), key.getName());
+    public final DeleteRequest delete(String bucket, String key) {
+        return this.delete(getBucket(bucket), key);
     }
 
 }

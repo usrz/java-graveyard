@@ -24,10 +24,8 @@ implements FetchRequest<T> {
 
     private final Class<T> type;
 
-    protected AbstractFetchRequest(Bucket bucket, String key, Class<T> type) {
-        super(bucket, key);
-        if (key == null) throw new NullPointerException("Null key");
-        if (key.length() == 0) throw new NullPointerException("Empty key");
+    protected AbstractFetchRequest(Key key, Class<T> type) {
+        super(key);
         this.type = type;
     }
 

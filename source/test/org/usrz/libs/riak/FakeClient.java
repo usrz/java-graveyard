@@ -22,33 +22,32 @@ import org.usrz.libs.riak.utils.IterableFuture;
 public class FakeClient extends AbstractRiakClient {
 
     @Override
-    public IterableFuture<String> getBucketNames() {
+    public IterableFuture<Bucket> getBuckets() throws IOException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public IterableFuture<String> getKeyNames(String bucket)
-    throws IOException {
+    public IterableFuture<Key> getKeys(Bucket bucket) throws IOException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public <T> FetchRequest<T> fetch(String bucket, String key, Class<T> type) {
+    public <T> FetchRequest<T> fetch(Key key, Class<T> type) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public <T> StoreRequest<T> store(String bucket, T object) {
+    public <T> StoreRequest<T> store(Bucket bucket, T object) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public <T> StoreRequest<T> store(String bucket, String key, T object) {
+    public <T> StoreRequest<T> store(Key key, T object) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public DeleteRequest delete(String bucket, String key) {
+    public DeleteRequest delete(Key key) {
         throw new UnsupportedOperationException();
     }
 

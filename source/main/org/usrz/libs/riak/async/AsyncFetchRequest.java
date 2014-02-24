@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.util.concurrent.Future;
 
 import org.usrz.libs.riak.AbstractFetchRequest;
+import org.usrz.libs.riak.Key;
 import org.usrz.libs.riak.Response;
 import org.usrz.libs.utils.beans.Mapper;
 
@@ -28,8 +29,9 @@ implements Mapper {
 
     private final AsyncRiakClient client;
 
-    protected AsyncFetchRequest(AsyncRiakClient client, String bucket, String key, Class<T> type) {
-        super(client.getBucket(bucket), key, type);
+    protected AsyncFetchRequest(AsyncRiakClient client, Key key, Class<T> type) {
+        // TODO: no need for client
+        super(key, type);
         this.client = client;
     }
 

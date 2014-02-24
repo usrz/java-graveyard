@@ -19,10 +19,8 @@ public abstract class AbstractDeleteRequest
 extends AbstractBucketRequest<Void, DeleteRequest>
 implements DeleteRequest {
 
-    protected AbstractDeleteRequest(Bucket bucket, String key) {
-        super(bucket, key);
-        if (key == null) throw new NullPointerException("Null key");
-        if (key.length() == 0) throw new NullPointerException("Empty key");
+    protected AbstractDeleteRequest(Key key) {
+        super(key);
     }
 
 }

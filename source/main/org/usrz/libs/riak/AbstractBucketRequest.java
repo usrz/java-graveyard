@@ -30,6 +30,14 @@ implements Request<T>, KeyedRequest<T, R>, BucketedRequest<T, R> {
     private Bucket bucket;
     private String key;
 
+    protected AbstractBucketRequest(Key key) {
+        this(key.getBucket(), key.getName());
+    }
+
+    protected AbstractBucketRequest(Bucket bucket) {
+        this(bucket, null);
+    }
+
     @SuppressWarnings("unchecked")
     protected AbstractBucketRequest(Bucket bucket, String key) {
         if (bucket == null) throw new NullPointerException("Null bucket");

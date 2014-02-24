@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.util.concurrent.Future;
 
 import org.usrz.libs.riak.AbstractDeleteRequest;
+import org.usrz.libs.riak.Key;
 import org.usrz.libs.riak.Response;
 import org.usrz.libs.utils.beans.Mapper;
 
@@ -28,8 +29,9 @@ implements Mapper {
 
     private final AsyncRiakClient client;
 
-    protected AsyncDeleteRequest(AsyncRiakClient client, String bucket, String key) {
-        super(client.getBucket(bucket), key);
+    protected AsyncDeleteRequest(AsyncRiakClient client, Key key) {
+        // TODO: no need for client
+        super(key);
         this.client = client;
     }
 
