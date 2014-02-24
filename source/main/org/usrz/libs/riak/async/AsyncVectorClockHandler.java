@@ -65,12 +65,11 @@ public class AsyncVectorClockHandler implements AsyncHandler<Void> {
     public Void onCompleted() throws Exception {
         final Request request = handler.getRequest();
 
-        log.debug("Vector Clock processing complete for %s: %s", request.getUrl(), vectorClock);
         if (vectorClock != null) {
             request.getHeaders().replace("X-Riak-Vclock", vectorClock);
         }
 
-        log.trace("Vector clock processor invoking %s on %s", request.getMethod(), request.getUrl());
+        log.debug("Calling %s on %s (vclock=%s)", request.getMethod(), request.getUrl(), vectorClock);
         handler.getFuture().addFuture(client.executeRequest(request, handler));
         return null;
     }

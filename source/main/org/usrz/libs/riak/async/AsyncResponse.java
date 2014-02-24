@@ -67,6 +67,16 @@ public class AsyncResponse<T> implements Response<T> {
     }
 
     @Override
+    public String getBucket() {
+        return reference == null ? null : reference.getBucket();
+    }
+
+    @Override
+    public String getKey() {
+        return reference == null ? null : reference.getKey();
+    }
+
+    @Override
     public boolean isSuccessful() {
         return successful;
     }

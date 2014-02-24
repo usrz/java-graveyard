@@ -160,9 +160,15 @@ public class AsyncRiakClient extends AbstractRiakClient {
                                               client.preparePut(url)
                                           ))));
 
-        /* Vector clock (if any) and build our request with the body */
-        final String vectorClock = (String) request.mappedProperties().get("vectorClock");
+        /* Return body (default is TRUE) */
+        final Map<String, ?> properties = request.mappedProperties();
+        if (!properties.containsKey("returnBody")) b.addQueryParameter("returnbody", "true");
+
+        /* Vector clock (if any) */
+        final String vectorClock = (String) properties.get("vectorClock");
         if (vectorClock != null) b.setHeader("X-Riak-Vclock", vectorClock);
+
+        /* Append our body and create our request */
         final Request r = b.setBody(new AsyncJsonGenerator(this, instance))
                            .addHeader("Content-Type", "application/json")
                            .build();
@@ -230,12 +236,7 @@ public class AsyncRiakClient extends AbstractRiakClient {
          * From "OptionalBodyRequest":
          * - returnBody // boolean
          */
-        if (properties.containsKey("returnBody")) {
-            builder.addQueryParameter("returnbody", ((Boolean) properties.get("returnBody")).toString());
-        } else {
-            /* Defaults to true  */
-            builder.addQueryParameter("returnbody", "true");
-        }
+        if (properties.containsKey("returnBody")) builder.addQueryParameter("returnbody", ((Boolean) properties.get("returnBody")).toString());
 
         /*
          * From "BasicQuorumRequest":

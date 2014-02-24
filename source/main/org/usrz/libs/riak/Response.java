@@ -31,6 +31,10 @@ public interface Response<T> {
 
     public Reference getReference();
 
+    public String getBucket();
+
+    public String  getKey();
+
     public boolean isSuccessful();
 
     public int getStatus();

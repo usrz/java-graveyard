@@ -118,8 +118,8 @@ public class AsyncResponseHandler<T> implements AsyncHandler<Void> {
 
         if (response.isSuccessful()) {
 
-            /* Parse only if we have some content */
-            if ((statusCode == 200) && (type != null)) try {
+            /* Parse only if we have some content (200 and 201, a type and content length) */
+            if ((type != null) && ((statusCode == 200) ||(statusCode == 201))) try {
                 if (Integer.parseInt(map.getFirstValue("Content-Length")) > 0) {
                     final PipedInputStream input = new PipedInputStream();
                     output = new PipedOutputStream(input);
@@ -139,7 +139,7 @@ public class AsyncResponseHandler<T> implements AsyncHandler<Void> {
             settable.addFuture(future);
             return STATE.CONTINUE;
 
-        } else {
+        } else if (statusCode != 404) {
 
             /* See if we have to setup an error parser */
             final PipedInputStream input = new PipedInputStream();
@@ -149,6 +149,12 @@ public class AsyncResponseHandler<T> implements AsyncHandler<Void> {
             return STATE.CONTINUE;
         }
 
+        /* Get the vector clock... *ALWAYS* */
+        response.setVectorClock(map.getFirstValue("X-Riak-Vclock"));
+
+        /* All the rest (location, last modified, indexes, metadata, .. only if successful */
+        if (!response.isSuccessful()) return STATE.CONTINUE;
+
         /* Set up our reference */
         final String location = map.getFirstValue("Location");
         final URI locationUri = location == null ? headers.getUrl() : headers.getUrl().resolve(location);
@@ -157,9 +163,6 @@ public class AsyncResponseHandler<T> implements AsyncHandler<Void> {
         /* Set up our last modified date */
         final String lastModified = map.getFirstValue("Last-Modified");
         if (lastModified != null) response.setLastModified(parseDate(lastModified));
-
-        /* Get the vector clock */
-        response.setVectorClock(map.getFirstValue("X-Riak-Vclock"));
 
         // TODO: parse metadata, links and indexes...
 
