@@ -21,7 +21,9 @@ import java.util.regex.Pattern;
 
 import org.usrz.libs.riak.utils.MultiValueMapBuilder;
 
-public class LinksMapBuilder extends MultiValueMapBuilder<String, Reference, LinksMap, LinksMapBuilder> {
+public class LinksMapBuilder
+extends MultiValueMapBuilder<String, Reference, LinksMap, LinksMapBuilder>
+implements RiakClientAware {
 
     private static final Pattern LINK_PATTERN = Pattern.compile("\\s*<([^>]+)>\\s*;\\s*riaktag\\s*=\\s*\"?([^\"]+)\"?\\s*");
 
@@ -31,6 +33,13 @@ public class LinksMapBuilder extends MultiValueMapBuilder<String, Reference, Lin
 
     public LinksMapBuilder(LinksMap map) {
         super(map);
+    }
+
+    /* ====================================================================== */
+
+    @Override
+    public RiakClient getRiakClient() {
+        return map.getRiakClient();
     }
 
     /* ====================================================================== */

@@ -23,6 +23,7 @@ import org.usrz.libs.riak.utils.RiakUtils;
 public class Reference implements RiakLocation {
 
     private static final Pattern PATTERN = Pattern.compile("(.*)/(riak|buckets)/([^/]+)/(keys/)?([^/\\?]+)([/\\?].*)?");
+
     private final RiakClient client;
     private final String bucket;
     private final String key;
