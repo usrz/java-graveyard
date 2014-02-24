@@ -37,8 +37,8 @@ import org.usrz.libs.testing.AbstractTest;
 
 public class RiakIntrospectorTest extends AbstractTest {
 
-    private final RiakIntrospector introspector = new RiakIntrospector(new FakeClient());
     private final RiakClient client = new FakeClient();
+    private final RiakIntrospector introspector = new RiakIntrospector(client);
 
     /* ====================================================================== */
 
@@ -232,8 +232,8 @@ public class RiakIntrospectorTest extends AbstractTest {
     public void testSimpleInstrumentationKB() {
         final SimpleInstrumentableKB object = new SimpleInstrumentableKB();
         introspector.setKey(object, key);
-        assertEquals(object.k, key.getKey());
-        assertEquals(object.b.getName(), key.getBucket());
+        assertEquals(object.k, key.getName());
+        assertEquals(object.b.getName(), key.getBucketName());
     }
 
     private class SimpleInstrumentableKB {
@@ -245,8 +245,8 @@ public class RiakIntrospectorTest extends AbstractTest {
     public void testSimpleInstrumentationKBS() {
         final SimpleInstrumentableKBS object = new SimpleInstrumentableKBS();
         introspector.setKey(object, key);
-        assertEquals(object.k, key.getKey());
-        assertEquals(object.b, key.getBucket());
+        assertEquals(object.k, key.getName());
+        assertEquals(object.b, key.getBucketName());
     }
 
     private class SimpleInstrumentableKBS {

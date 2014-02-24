@@ -50,7 +50,7 @@ public class AsyncRiakClientTest extends AbstractTest {
             log.debug("Found bucket \"%s\"", bucket.getName());
             for (Key key: bucket.getKeys()) {
                 keys ++;
-                log.debug("   in bucket \"%s\" found key \"%s\"", key.getBucket(), key.getKey() );
+                log.debug("   in bucket \"%s\" found key \"%s\"", key.getBucketName(), key.getName() );
             }
         }
         log.info("Found a total of %d buckets and %d keys", buckets, keys);

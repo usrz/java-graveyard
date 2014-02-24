@@ -20,12 +20,12 @@ import java.util.regex.Pattern;
 
 import org.usrz.libs.riak.utils.RiakUtils;
 
-public class Key implements RiakLocation {
+public final class Key implements RiakLocation {
 
     private static final Pattern PATTERN = Pattern.compile("(.*)/(riak|buckets)/([^/]+)/(keys/)?([^/\\?]+)([/\\?].*)?");
 
     private final RiakClient client;
-    private final String bucket;
+    private final Bucket bucket;
     private final String key;
 
     public Key(RiakClient client, String location) {
@@ -33,12 +33,10 @@ public class Key implements RiakLocation {
         final Matcher matcher = PATTERN.matcher(location);
         if (matcher.matches()) {
             this.client = client;
-            bucket = RiakUtils.decode(matcher.group(3));
+            bucket = client.getBucket(RiakUtils.decode(matcher.group(3)));
             key = RiakUtils.decode(matcher.group(5));
             if (key == null) throw new NullPointerException("Null key parsing: " + location);
-            if (bucket == null) throw new NullPointerException("Null bucket parsing: " + location);
             if (key.length() == 0) throw new IllegalArgumentException("Empty key parsing: " + location);
-            if (bucket.length() == 0) throw new IllegalArgumentException("Empty bucket parsing: " + location);
         } else {
             throw new IllegalArgumentException("Invalid link location: " + location);
         }
@@ -49,7 +47,7 @@ public class Key implements RiakLocation {
         if (key.length() == 0) throw new IllegalArgumentException("Empty key");
 
         client = bucket.getRiakClient();
-        this.bucket = bucket.getName();
+        this.bucket = bucket;
         this.key = key;
     }
 
@@ -57,31 +55,39 @@ public class Key implements RiakLocation {
         this(client.getBucket(bucket), key);
     }
 
+    /* ====================================================================== */
+
     @Override
     public final RiakClient getRiakClient() {
         return client;
     }
 
-    public final String getBucket() {
+    public final Bucket getBucket() {
         return bucket;
     }
 
-    public final String getKey() {
+    public final String getBucketName() {
+        return bucket.getName();
+    }
+
+    public final String getName() {
         return key;
     }
 
     @Override
     public final String getLocation() {
-        return "/buckets/" + RiakUtils.encode(bucket) + "/keys/" + RiakUtils.encode(key);
+        return bucket.getLocation() + "keys/" + RiakUtils.encode(key);
     }
+
+    /* ====================================================================== */
 
     @Override
     public boolean equals(Object object) {
         if (object == this) return true;
         if (object == null) return false;
         try {
-            final Key index = (Key) object;
-            return bucket.equals(index.bucket) && key.equals(index.key);
+            final Key key = (Key) object;
+            return bucket.equals(key.bucket) && this.key.equals(key.key);
         } catch (ClassCastException exception) {
             return false;
         }
@@ -95,10 +101,8 @@ public class Key implements RiakLocation {
     @Override
     public String toString() {
         return new StringBuilder(this.getClass().getName())
-                         .append("[/buckets/")
-                         .append(bucket)
-                         .append("/keys/")
-                         .append(key)
+                         .append('[')
+                         .append(getLocation())
                          .append("]@")
                          .append(Integer.toHexString(hashCode()))
                          .toString();

@@ -25,8 +25,8 @@ public class KeyTest extends AbstractTest {
     @Test
     public void testEncoded() {
         final Key key = new Key(client, "/buckets/dev%40usrz/keys/f%C3%BCbar");
-        assertEquals(key.getBucket(), "dev@usrz");
-        assertEquals(key.getKey(), "f\u00FCbar");
+        assertEquals(key.getBucketName(), "dev@usrz");
+        assertEquals(key.getName(), "f\u00FCbar");
     }
 
     @Test
@@ -40,12 +40,12 @@ public class KeyTest extends AbstractTest {
                                            "http://127.0.0.1:1234/buckets/mybucket/keys/mykey",
                                            "http://127.0.0.1:1234/buckets/mybucket/keys/mykey/" }) {
             final Key key1 = new Key(client, string);
-            assertEquals(key1.getBucket(), "mybucket");
-            assertEquals(key1.getKey(), "mykey");
+            assertEquals(key1.getBucketName(), "mybucket");
+            assertEquals(key1.getName(), "mykey");
 
             final Key key2 = new Key(client, string + "?foo=bar");
-            assertEquals(key2.getBucket(), "mybucket");
-            assertEquals(key2.getKey(), "mykey");
+            assertEquals(key2.getBucketName(), "mybucket");
+            assertEquals(key2.getName(), "mykey");
         }
     }
 }

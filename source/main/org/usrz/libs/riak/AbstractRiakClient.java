@@ -75,7 +75,7 @@ public abstract class AbstractRiakClient implements RiakClient {
 
     @Override
     public <T> FetchRequest<T> fetch(Key key, Class<T> type) {
-        return this.fetch(key.getBucket(), key.getKey(), type);
+        return this.fetch(key.getBucketName(), key.getName(), type);
     }
 
     @Override
@@ -90,7 +90,7 @@ public abstract class AbstractRiakClient implements RiakClient {
 
     @Override
     public <T> StoreRequest<T> store(Key key, T object) {
-        return this.store(key.getBucket(), key.getKey(), object);
+        return this.store(key.getBucketName(), key.getName(), object);
     }
 
     @Override
@@ -100,7 +100,7 @@ public abstract class AbstractRiakClient implements RiakClient {
 
     @Override
     public DeleteRequest delete(Key key) {
-        return this.delete(key.getBucket(), key.getKey());
+        return this.delete(key.getBucketName(), key.getName());
     }
 
 }

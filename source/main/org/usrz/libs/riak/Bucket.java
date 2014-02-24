@@ -75,6 +75,8 @@ public class Bucket implements RiakLocation {
         return client.delete(name, key);
     }
 
+    /* ====================================================================== */
+
     @Override
     public int hashCode() {
         return client.hashCode() ^ name.hashCode();

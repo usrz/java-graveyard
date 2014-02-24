@@ -83,12 +83,12 @@ public class AsyncResponse<T> implements Response<T> {
 
     @Override
     public String getBucket() {
-        return key == null ? null : key.getBucket();
+        return key == null ? null : key.getBucketName();
     }
 
     @Override
     public String getKeyName() {
-        return key == null ? null : key.getKey();
+        return key == null ? null : key.getName();
     }
 
     @Override

@@ -256,19 +256,19 @@ public class RiakIntrospector {
 
     public <T> RiakIntrospector setKey(T instance, Key key) {
         final IntrospectionDescriptor<T> descriptor = descriptor(instance);
-        final Bucket bucket = client.getBucket(key.getBucket());
+        final Bucket bucket = client.getBucket(key.getBucketName());
 
         for (Entry<RiakBucket, Set<IntrospectedProperty<T>>> entry: descriptor.getProperties(RiakBucket.class).entrySet()) {
             for (IntrospectedProperty<T> property: entry.getValue()) {
                 if (property.canWrite(Bucket.class)) property.write(instance, bucket);
-                if (property.canWrite(String.class)) property.write(instance, key.getBucket());
+                if (property.canWrite(String.class)) property.write(instance, key.getBucketName());
             }
         }
 
         for (Entry<RiakKey, Set<IntrospectedProperty<T>>> entry: descriptor.getProperties(RiakKey.class).entrySet()) {
             for (IntrospectedProperty<T> property: entry.getValue()) {
                 if (property.canWrite(Key.class)) property.write(instance, key);
-                if (property.canWrite(String.class)) property.write(instance, key.getKey());
+                if (property.canWrite(String.class)) property.write(instance, key.getName());
             }
         }
 
