@@ -36,7 +36,7 @@ public class LinksMapBuilder extends MultiValueMapBuilder<String, Reference, Lin
     /* ====================================================================== */
 
     public LinksMapBuilder parseHeader(String header) {
-        final StringTokenizer tokenizer = new StringTokenizer(header, ", ", false);
+        final StringTokenizer tokenizer = new StringTokenizer(header, ",", false);
         while (tokenizer.hasMoreTokens()) {
             final String token = tokenizer.nextToken();
             final Matcher matcher = LINK_PATTERN.matcher(token);

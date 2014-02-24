@@ -38,7 +38,7 @@ public class MetadataBuilder extends MultiValueMapBuilder<String, String, Metada
         name = name.toLowerCase().trim();
         if (name.startsWith("x-riak-meta-")) {
             final String field = name.substring(12);
-            final StringTokenizer tokenizer = new StringTokenizer(value, ", ", false);
+            final StringTokenizer tokenizer = new StringTokenizer(value, ",", false);
             while (tokenizer.hasMoreTokens()) {
                 this.add(field, RiakUtils.decode(tokenizer.nextToken().trim()));
             }

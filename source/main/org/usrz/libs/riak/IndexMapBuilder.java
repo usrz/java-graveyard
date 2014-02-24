@@ -38,7 +38,7 @@ public class IndexMapBuilder extends MultiValueMapBuilder<Index, String, IndexMa
     public IndexMapBuilder parseHeader(String name, String value) {
         if (name.toLowerCase().trim().startsWith("x-riak-index-")) {
             final Index index = new Index(name);
-            final StringTokenizer tokenizer = new StringTokenizer(value, ", ", false);
+            final StringTokenizer tokenizer = new StringTokenizer(value, ",", false);
             while (tokenizer.hasMoreTokens()) {
                 this.add(index, RiakUtils.decode(tokenizer.nextToken().trim()));
             }
