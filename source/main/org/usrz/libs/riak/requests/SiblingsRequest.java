@@ -13,11 +13,11 @@
  * See the License for the specific language governing permissions and        *
  * limitations under the License.                                             *
  * ========================================================================== */
-package org.usrz.libs.riak.aspects;
+package org.usrz.libs.riak.requests;
 
-public interface KeyedRequest<T, R extends KeyedRequest<T, R>>
+public interface SiblingsRequest<T, R extends SiblingsRequest<T, R>>
 extends Request<T> {
 
-    public R setKey(String key);
+    public R setSibling(String sibling);
 
 }

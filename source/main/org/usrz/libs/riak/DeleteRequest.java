@@ -15,11 +15,11 @@
  * ========================================================================== */
 package org.usrz.libs.riak;
 
-import org.usrz.libs.riak.aspects.BucketedRequest;
-import org.usrz.libs.riak.aspects.KeyedRequest;
-import org.usrz.libs.riak.aspects.ReadQuorumRequest;
-import org.usrz.libs.riak.aspects.Request;
-import org.usrz.libs.riak.aspects.WriteQuorumRequest;
+import org.usrz.libs.riak.requests.BucketedRequest;
+import org.usrz.libs.riak.requests.KeyedRequest;
+import org.usrz.libs.riak.requests.ReadQuorumRequest;
+import org.usrz.libs.riak.requests.Request;
+import org.usrz.libs.riak.requests.WriteQuorumRequest;
 
 public interface DeleteRequest
 extends Request<Void>,

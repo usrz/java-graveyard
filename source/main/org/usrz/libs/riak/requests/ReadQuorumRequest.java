@@ -13,11 +13,19 @@
  * See the License for the specific language governing permissions and        *
  * limitations under the License.                                             *
  * ========================================================================== */
-package org.usrz.libs.riak.aspects;
+package org.usrz.libs.riak.requests;
 
-public interface SiblingsRequest<T, R extends SiblingsRequest<T, R>>
+import org.usrz.libs.riak.Quorum;
+
+public interface ReadQuorumRequest<T, R extends ReadQuorumRequest<T, R>>
 extends Request<T> {
 
-    public R setSibling(String sibling);
+    public R setReadQuorum(int quorum);
+
+    public R setReadQuorum(Quorum quorum);
+
+    public R setPrimaryReadQuorum(int quorum);
+
+    public R setPrimaryReadQuorum(Quorum quorum);
 
 }

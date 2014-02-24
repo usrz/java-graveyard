@@ -13,15 +13,11 @@
  * See the License for the specific language governing permissions and        *
  * limitations under the License.                                             *
  * ========================================================================== */
-package org.usrz.libs.riak.aspects;
+package org.usrz.libs.riak.requests;
 
-import org.usrz.libs.riak.Bucket;
-
-public interface BucketedRequest<T, R extends BucketedRequest<T, R>>
+public interface OptionalBodyRequest<T, R extends OptionalBodyRequest<T, R>>
 extends Request<T> {
 
-    public R setBucket(String bucket);
-
-    public R setBucket(Bucket bucket);
+    public R setReturnBody(boolean returnBody);
 
 }

@@ -13,11 +13,11 @@
  * See the License for the specific language governing permissions and        *
  * limitations under the License.                                             *
  * ========================================================================== */
-package org.usrz.libs.riak.aspects;
+package org.usrz.libs.riak.requests;
 
-public interface OptionalBodyRequest<T, R extends OptionalBodyRequest<T, R>>
+public interface VectorClockRequest<T, R extends VectorClockRequest<T, R>>
 extends Request<T> {
 
-    public R setReturnBody(boolean returnBody);
+    public R setVectorClock(String vectorClock);
 
 }

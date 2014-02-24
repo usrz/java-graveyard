@@ -13,16 +13,11 @@
  * See the License for the specific language governing permissions and        *
  * limitations under the License.                                             *
  * ========================================================================== */
-package org.usrz.libs.riak.aspects;
+package org.usrz.libs.riak.requests;
 
-import java.io.IOException;
-import java.util.concurrent.Future;
+public interface KeyedRequest<T, R extends KeyedRequest<T, R>>
+extends Request<T> {
 
-import org.usrz.libs.riak.Response;
-
-public interface Request<T> {
-
-    public Future<Response<T>> execute()
-    throws IOException;
+    public R setKey(String key);
 
 }

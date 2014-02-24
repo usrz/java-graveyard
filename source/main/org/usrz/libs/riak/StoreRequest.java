@@ -15,13 +15,13 @@
  * ========================================================================== */
 package org.usrz.libs.riak;
 
-import org.usrz.libs.riak.aspects.BucketedRequest;
-import org.usrz.libs.riak.aspects.ConditionalRequest;
-import org.usrz.libs.riak.aspects.KeyedRequest;
-import org.usrz.libs.riak.aspects.OptionalBodyRequest;
-import org.usrz.libs.riak.aspects.Request;
-import org.usrz.libs.riak.aspects.VectorClockRequest;
-import org.usrz.libs.riak.aspects.WriteQuorumRequest;
+import org.usrz.libs.riak.requests.BucketedRequest;
+import org.usrz.libs.riak.requests.ConditionalRequest;
+import org.usrz.libs.riak.requests.KeyedRequest;
+import org.usrz.libs.riak.requests.OptionalBodyRequest;
+import org.usrz.libs.riak.requests.Request;
+import org.usrz.libs.riak.requests.VectorClockRequest;
+import org.usrz.libs.riak.requests.WriteQuorumRequest;
 
 public interface StoreRequest<T>
 extends Request<T>,

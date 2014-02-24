@@ -13,19 +13,16 @@
  * See the License for the specific language governing permissions and        *
  * limitations under the License.                                             *
  * ========================================================================== */
-package org.usrz.libs.riak.aspects;
+package org.usrz.libs.riak.requests;
 
-import org.usrz.libs.riak.Quorum;
+import java.io.IOException;
+import java.util.concurrent.Future;
 
-public interface ReadQuorumRequest<T, R extends ReadQuorumRequest<T, R>>
-extends Request<T> {
+import org.usrz.libs.riak.Response;
 
-    public R setReadQuorum(int quorum);
+public interface Request<T> {
 
-    public R setReadQuorum(Quorum quorum);
-
-    public R setPrimaryReadQuorum(int quorum);
-
-    public R setPrimaryReadQuorum(Quorum quorum);
+    public Future<Response<T>> execute()
+    throws IOException;
 
 }

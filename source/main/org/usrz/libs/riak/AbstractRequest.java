@@ -18,9 +18,9 @@ package org.usrz.libs.riak;
 import java.io.IOException;
 import java.util.concurrent.Future;
 
-import org.usrz.libs.riak.aspects.BucketedRequest;
-import org.usrz.libs.riak.aspects.KeyedRequest;
-import org.usrz.libs.riak.aspects.Request;
+import org.usrz.libs.riak.requests.BucketedRequest;
+import org.usrz.libs.riak.requests.KeyedRequest;
+import org.usrz.libs.riak.requests.Request;
 
 public abstract class AbstractRequest<T, R extends Request<T>
                                                  & KeyedRequest<T, R>

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and        *
  * limitations under the License.                                             *
  * ========================================================================== */
-package org.usrz.libs.riak;
+package org.usrz.libs.riak.utils;
 
 import static org.usrz.libs.riak.IndexType.BINARY;
 import static org.usrz.libs.riak.IndexType.INTEGER;
@@ -23,6 +23,11 @@ import java.util.HashSet;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import org.usrz.libs.riak.Bucket;
+import org.usrz.libs.riak.IndexMap;
+import org.usrz.libs.riak.LinksMap;
+import org.usrz.libs.riak.Metadata;
+import org.usrz.libs.riak.Reference;
 import org.usrz.libs.riak.annotations.RiakBucket;
 import org.usrz.libs.riak.annotations.RiakIndex;
 import org.usrz.libs.riak.annotations.RiakKey;
