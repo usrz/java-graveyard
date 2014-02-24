@@ -81,7 +81,7 @@ public final class RiakUtils {
     public static final String encode(Iterable<String> keys) {
         final StringBuilder builder = new StringBuilder();
         for (String key: keys) builder.append(", ").append(encode(key));
-        return builder.length() > 2 ? builder.toString() : "";
+        return builder.length() > 2 ? builder.substring(2) : "";
     }
 
 
