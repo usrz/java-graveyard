@@ -33,6 +33,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
 import org.usrz.libs.logging.Log;
+import org.usrz.libs.riak.IndexMapBuilder;
+import org.usrz.libs.riak.LinksMapBuilder;
+import org.usrz.libs.riak.MetadataBuilder;
 import org.usrz.libs.riak.Reference;
 import org.usrz.libs.riak.Response;
 import org.usrz.libs.riak.SiblingsException;
@@ -164,7 +167,10 @@ public class AsyncResponseHandler<T> implements AsyncHandler<Void> {
         final String lastModified = map.getFirstValue("Last-Modified");
         if (lastModified != null) response.setLastModified(parseDate(lastModified));
 
-        // TODO: parse metadata, links and indexes...
+        /* Parse indexes, links and metadata */
+        response.getLinksMap().addAll(new LinksMapBuilder().parseHeaders(map.get("Link")).build());
+        response.getIndexMap().addAll(new IndexMapBuilder().parseHeaders(map).build());
+        response.getMetadata().addAll(new MetadataBuilder().parseHeaders(map).build());
 
         /* Continue! */
         return STATE.CONTINUE;

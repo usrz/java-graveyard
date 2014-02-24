@@ -24,16 +24,16 @@ public abstract class AbstractStoreRequest<T>
 extends AbstractRequest<T, StoreRequest<T>>
 implements StoreRequest<T> {
 
-    private final MetadataBuilder metadata;
-    private final IndexMapBuilder indexMap;
-    private final LinksMapBuilder linksMap;
+    private final Metadata metadata;
+    private final IndexMap indexMap;
+    private final LinksMap linksMap;
     private final T instance;
 
     protected AbstractStoreRequest(String bucket, T instance, RiakIntrospector introspector) {
         super(bucket, introspector.getKey(instance));
-        this.metadata = new MetadataBuilder(introspector.getMetadata(instance));
-        this.indexMap = new IndexMapBuilder(introspector.getIndexMap(instance));
-        this.linksMap = new LinksMapBuilder(introspector.getLinksMap(instance));
+        this.metadata = introspector.getMetadata(instance);
+        this.indexMap = introspector.getIndexMap(instance);
+        this.linksMap = introspector.getLinksMap(instance);
         this.instance = instance;
     }
 
@@ -51,17 +51,17 @@ implements StoreRequest<T> {
     /* ====================================================================== */
 
     @Override
-    public MetadataBuilder getMetadataBuilder() {
+    public Metadata getMetadata() {
         return metadata;
     }
 
     @Override
-    public IndexMapBuilder getIndexMapBuilder() {
+    public IndexMap getIndexMap() {
         return indexMap;
     }
 
     @Override
-    public LinksMapBuilder getLinksMapBuilder() {
+    public LinksMap getLinksMap() {
         return linksMap;
     }
 

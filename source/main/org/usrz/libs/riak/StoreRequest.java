@@ -32,10 +32,10 @@ extends Request<T>,
         WriteQuorumRequest<T, StoreRequest<T>>,
         OptionalBodyRequest<T, StoreRequest<T>> {
 
-    public MetadataBuilder getMetadataBuilder();
+    public Metadata getMetadata();
 
-    public IndexMapBuilder getIndexMapBuilder();
+    public IndexMap getIndexMap();
 
-    public LinksMapBuilder getLinksMapBuilder();
+    public LinksMap getLinksMap();
 
 }

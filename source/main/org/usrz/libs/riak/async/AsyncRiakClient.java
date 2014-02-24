@@ -152,9 +152,9 @@ public class AsyncRiakClient extends AbstractRiakClient {
         @SuppressWarnings("unchecked")
         final Class<T> type = (Class<T>) instance.getClass();
         final String url = getUrl(bucket, key);
-        final BoundRequestBuilder b = build(request.getIndexMapBuilder().build(),
-                                      build(request.getLinksMapBuilder().build(),
-                                      build(request.getMetadataBuilder().build(),
+        final BoundRequestBuilder b = build(request.getIndexMap(),
+                                      build(request.getLinksMap(),
+                                      build(request.getMetadata(),
                                       build(request, key == null ?
                                               client.preparePost(url) :
                                               client.preparePut(url)
