@@ -75,6 +75,32 @@ public class RiakIntrospector {
 
     /* ====================================================================== */
 
+    protected String indexName(RiakIndex annotation, IntrospectedProperty<?> property) {
+        /* Hairy... prefer "name" over "value", and use property name as default */
+        final String name = "".equals(annotation.name()) ?
+                "".equals(annotation.value()) ?
+                    property.getName() :
+                    annotation.value() :
+                annotation.name();
+        if (name == null) return null;
+        final String normalized = name.toLowerCase().trim();
+        return "".equals(normalized) ? null : name;
+    }
+
+    protected String linkTag(RiakLink annotation, IntrospectedProperty<?> property) {
+        final String name = "".equals(annotation.value()) ? property.getName() : annotation.value();
+        final String normalized = name.toLowerCase().trim();
+        return "".equals(normalized) ? null : name;
+    }
+
+    protected String metadataField(RiakMetadata annotation, IntrospectedProperty<?> property) {
+        final String name = "".equals(annotation.value()) ? property.getName() : annotation.value();
+        final String normalized = name.toLowerCase().trim();
+        return "".equals(normalized) ? null : name;
+    }
+
+    /* ====================================================================== */
+
     public <T> String getKey(T instance) {
         final IntrospectionDescriptor<T> descriptor = descriptor(instance);
 
@@ -119,7 +145,7 @@ public class RiakIntrospector {
             final RiakMetadata annotation = entry.getKey();
             for (IntrospectedProperty<T> property: entry.getValue()) {
                 if (property.canRead()) {
-                    final String field = "".equals(annotation.value()) ? property.getName() : annotation.value();
+                    final String field = metadataField(annotation, property);
 
                     if ((field == null) || ("".equals(field))) try {
                         final Metadata map = property.read(instance, Metadata.class);
@@ -147,16 +173,10 @@ public class RiakIntrospector {
         for (Entry<RiakIndex, Set<IntrospectedProperty<T>>> entry: descriptor.getProperties(RiakIndex.class).entrySet()) {
             for (IntrospectedProperty<T> property: entry.getValue()) {
                 if (property.canRead()) {
-
-                    /* Hairy... prefer "name" over "value", and use property name as default */
                     final RiakIndex annotation = entry.getKey();
-                    final String name = "".equals(annotation.name()) ?
-                                            "".equals(annotation.value()) ?
-                                                property.getName() :
-                                                annotation.value() :
-                                            annotation.name();
+                    final String name = indexName(annotation, property);
 
-                    if ((name == null) || ("".equals(name))) try {
+                    if (name == null) try {
                         final IndexMap map = property.read(instance, IndexMap.class);
                         if (map != null) indexMap.addAll(map);
                         continue;
@@ -192,7 +212,7 @@ public class RiakIntrospector {
                 if (property.canRead()) {
 
                     /* Get the link tag */
-                    final String tag = "".equals(annotation.value()) ? property.getName() : annotation.value();
+                    final String tag = linkTag(annotation, property);
                     if ((tag == null) || ("".equals(tag))) try {
                         final LinksMap map = property.read(instance, LinksMap.class);
                         if (map != null) linksMap.addAll(map);
@@ -217,4 +237,39 @@ public class RiakIntrospector {
 
         return linksMap;
     }
+
+    /* ====================================================================== */
+
+    public RiakIntrospector setKey(Object instance, String key) {
+        //TODO
+        throw new UnsupportedOperationException();
+    }
+
+    public RiakIntrospector setBucket(Object instance, String bucket) {
+        //TODO
+        throw new UnsupportedOperationException();
+    }
+
+    public RiakIntrospector setReference(Object instance, Reference reference) {
+        setBucket(instance, reference.getBucket());
+        setKey(instance, reference.getKey());
+        return this;
+    }
+
+    public RiakIntrospector setIndexMap(Object instance, IndexMap indexMap) {
+        //TODO
+        throw new UnsupportedOperationException();
+    }
+
+
+    public RiakIntrospector setLinksMap(Object instance, LinksMap linksMap) {
+        //TODO
+        throw new UnsupportedOperationException();
+    }
+
+    public RiakIntrospector setMetadata(Object instance, Metadata metadata) {
+        //TODO
+        throw new UnsupportedOperationException();
+    }
+
 }
