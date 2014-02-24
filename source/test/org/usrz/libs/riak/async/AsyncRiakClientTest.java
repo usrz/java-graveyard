@@ -22,7 +22,6 @@ import org.usrz.libs.riak.Bucket;
 import org.usrz.libs.riak.Reference;
 import org.usrz.libs.riak.Response;
 import org.usrz.libs.riak.RiakClient;
-import org.usrz.libs.riak.async.AsyncRiakClient;
 import org.usrz.libs.testing.AbstractTest;
 
 import com.ning.http.client.AsyncHttpClient;
@@ -45,7 +44,7 @@ public class AsyncRiakClientTest extends AbstractTest {
 
     }
 
-    //@Test
+    @Test
     public void testStore()
     throws Exception {
         final RiakClient client = new AsyncRiakClient(new AsyncHttpClient());

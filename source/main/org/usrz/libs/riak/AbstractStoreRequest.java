@@ -27,7 +27,6 @@ implements StoreRequest<T> {
     private final MetadataBuilder metadata;
     private final IndexMapBuilder indexMap;
     private final LinksMapBuilder linksMap;
-    private String vectorClock;
     private final T instance;
 
     protected AbstractStoreRequest(String bucket, T instance, RiakIntrospector introspector) {
@@ -35,7 +34,6 @@ implements StoreRequest<T> {
         this.metadata = new MetadataBuilder(introspector.getMetadata(instance));
         this.indexMap = new IndexMapBuilder(introspector.getIndexMap(instance));
         this.linksMap = new LinksMapBuilder(introspector.getLinksMap(instance));
-        this.vectorClock = introspector.getVectorClock(instance);
         this.instance = instance;
     }
 
@@ -44,19 +42,13 @@ implements StoreRequest<T> {
     @Override
     protected final Future<Response<T>> execute(String bucket, String key)
     throws IOException {
-        return this.execute(bucket, key, vectorClock, instance);
+        return this.execute(bucket, key, instance);
     }
 
-    protected abstract Future<Response<T>> execute(String bucket, String key, String vectorClock, T instance)
+    protected abstract Future<Response<T>> execute(String bucket, String key, T instance)
     throws IOException;
 
     /* ====================================================================== */
-
-    @Override
-    public AbstractStoreRequest<T> setVectorClock(String vectorClock) {
-        this.vectorClock = vectorClock;
-        return this;
-    }
 
     @Override
     public MetadataBuilder getMetadataBuilder() {

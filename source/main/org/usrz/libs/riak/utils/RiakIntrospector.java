@@ -33,7 +33,6 @@ import org.usrz.libs.riak.annotations.RiakIndex;
 import org.usrz.libs.riak.annotations.RiakKey;
 import org.usrz.libs.riak.annotations.RiakLink;
 import org.usrz.libs.riak.annotations.RiakMetadata;
-import org.usrz.libs.riak.annotations.RiakVectorClock;
 import org.usrz.libs.utils.beans.IntrospectedProperty;
 import org.usrz.libs.utils.beans.IntrospectionDescriptor;
 import org.usrz.libs.utils.beans.IntrospectionException;
@@ -114,18 +113,6 @@ public class RiakIntrospector {
         } catch (RuntimeException exception) {
             throw new IllegalStateException("Unable to construct reference from " + instance.getClass().getName() + ": " + exception.getMessage(), exception);
         }
-    }
-
-    public <T> String getVectorClock(T instance) {
-        final IntrospectionDescriptor<T> descriptor = descriptor(instance);
-
-        for (Entry<RiakVectorClock, Set<IntrospectedProperty<T>>> entry: descriptor.getProperties(RiakVectorClock.class).entrySet()) {
-            for (IntrospectedProperty<T> property: entry.getValue()) {
-                if (property.canRead()) return property.read(instance, String.class);
-            }
-        }
-
-        return null;
     }
 
     public <T> Metadata getMetadata(T instance) {

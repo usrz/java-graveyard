@@ -147,7 +147,7 @@ public class AsyncRiakClient extends AbstractRiakClient {
         return f;
     }
 
-    protected <T> Future<Response<T>> executeStore(AsyncStoreRequest<T> request, String bucket, String key, String vectorClock, T instance)
+    protected <T> Future<Response<T>> executeStore(AsyncStoreRequest<T> request, String bucket, String key, T instance)
     throws IOException {
         @SuppressWarnings("unchecked")
         final Class<T> type = (Class<T>) instance.getClass();
@@ -161,6 +161,7 @@ public class AsyncRiakClient extends AbstractRiakClient {
                                           ))));
 
         /* Vector clock (if any) and build our request with the body */
+        final String vectorClock = (String) request.mappedProperties().get("vectorClock");
         if (vectorClock != null) b.setHeader("X-Riak-Vclock", vectorClock);
         final Request r = b.setBody(new AsyncJsonGenerator(this, instance))
                            .addHeader("Content-Type", "application/json")

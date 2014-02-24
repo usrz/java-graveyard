@@ -34,9 +34,9 @@ implements Mapper {
     }
 
     @Override
-    protected Future<Response<T>> execute(String bucket, String key, String vectorClock, T instance)
+    protected Future<Response<T>> execute(String bucket, String key, T instance)
     throws IOException {
-        return this.client.executeStore(this, bucket, key, vectorClock, instance);
+        return this.client.executeStore(this, bucket, key, instance);
     }
 
 }
