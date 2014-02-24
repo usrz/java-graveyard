@@ -21,29 +21,55 @@ import java.util.concurrent.Future;
 import org.usrz.libs.riak.requests.BucketedRequest;
 import org.usrz.libs.riak.requests.KeyedRequest;
 
-public abstract class AbstractBucketRequest<T, R extends Request<T>
+public abstract class AbstractRequest<T, R extends Request<T>
                                                  & KeyedRequest<T, R>
                                                  & BucketedRequest<T,R>>
 implements Request<T>, KeyedRequest<T, R>, BucketedRequest<T, R> {
 
     private final R thisInstance;
-    private Bucket bucket;
-    private String key;
+    protected Bucket bucket;
+    protected Key key;
 
-    protected AbstractBucketRequest(Key key) {
-        this(key.getBucket(), key.getName());
-    }
-
-    protected AbstractBucketRequest(Bucket bucket) {
-        this(bucket, null);
+    @SuppressWarnings("unchecked")
+    protected AbstractRequest(Key key) {
+        if (key == null) throw new NullPointerException("Null key");
+        this.bucket = key.getBucket();
+        this.key = key;
+        thisInstance = (R) this;
     }
 
     @SuppressWarnings("unchecked")
-    protected AbstractBucketRequest(Bucket bucket, String key) {
+    protected AbstractRequest(Bucket bucket) {
         if (bucket == null) throw new NullPointerException("Null bucket");
-        thisInstance = (R) this;
         this.bucket = bucket;
-        this.key = key;
+        this.key = null;
+        thisInstance = (R) this;
+    }
+
+    @SuppressWarnings("unchecked")
+    protected AbstractRequest(Bucket bucket, String key) {
+        if (bucket == null) throw new NullPointerException("Null bucket");
+        this.key = key == null ? null : new Key(bucket, key);
+        this.bucket = bucket;
+        thisInstance = (R) this;
+    }
+
+    /* ====================================================================== */
+
+    @Override
+    public final Future<Response<T>> execute()
+    throws IOException {
+        return key == null ? execute(bucket) : execute(key);
+    }
+
+    protected Future<Response<T>> execute(Bucket bucket)
+    throws IOException {
+        throw new UnsupportedOperationException();
+    }
+
+    protected Future<Response<T>> execute(Key key)
+    throws IOException {
+        throw new UnsupportedOperationException();
     }
 
     /* ====================================================================== */
@@ -53,19 +79,19 @@ implements Request<T>, KeyedRequest<T, R>, BucketedRequest<T, R> {
         return bucket.getRiakClient();
     }
 
-    @Override
-    public final Future<Response<T>> execute()
-    throws IOException {
-        return this.execute(bucket.getName(), key);
-    }
-
-    protected abstract Future<Response<T>> execute(String bucket, String key)
-    throws IOException ;
-
     /* ====================================================================== */
 
     @Override
     public final R setKey(String key) {
+        if (bucket == null) throw new NullPointerException("Null key");
+        this.key = new Key(bucket, key);
+        return thisInstance;
+    }
+
+    @Override
+    public final R setKey(Key key) {
+        if (key == null) throw new NullPointerException("Null key");
+        this.bucket = key.getBucket();
         this.key = key;
         return thisInstance;
     }

@@ -15,11 +15,14 @@
  * ========================================================================== */
 package org.usrz.libs.riak.requests;
 
+import org.usrz.libs.riak.Key;
 import org.usrz.libs.riak.Request;
 
 public interface KeyedRequest<T, R extends KeyedRequest<T, R>>
 extends Request<T> {
 
     public R setKey(String key);
+
+    public R setKey(Key key);
 
 }

@@ -21,7 +21,7 @@ import java.util.concurrent.Future;
 import org.usrz.libs.riak.annotations.RiakIntrospector;
 
 public abstract class AbstractStoreRequest<T>
-extends AbstractBucketRequest<T, StoreRequest<T>>
+extends AbstractRequest<T, StoreRequest<T>>
 implements StoreRequest<T> {
 
     private final Metadata metadata;
@@ -48,13 +48,16 @@ implements StoreRequest<T> {
     /* ====================================================================== */
 
     @Override
-    protected final Future<Response<T>> execute(String bucket, String key)
+    protected Future<Response<T>> execute(Bucket bucket)
     throws IOException {
-        return this.execute(bucket, key, instance);
+        return ((AbstractRiakClient)bucket.getRiakClient()).executeStore(this, bucket, instance);
     }
 
-    protected abstract Future<Response<T>> execute(String bucket, String key, T instance)
-    throws IOException;
+    @Override
+    protected Future<Response<T>> execute(Key key)
+    throws IOException {
+        return ((AbstractRiakClient)key.getRiakClient()).executeStore(this, key, instance);
+    }
 
     /* ====================================================================== */
 

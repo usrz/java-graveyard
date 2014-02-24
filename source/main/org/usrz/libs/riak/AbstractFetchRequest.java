@@ -19,7 +19,7 @@ import java.io.IOException;
 import java.util.concurrent.Future;
 
 public abstract class AbstractFetchRequest<T>
-extends AbstractBucketRequest<T, FetchRequest<T>>
+extends AbstractRequest<T, FetchRequest<T>>
 implements FetchRequest<T> {
 
     private final Class<T> type;
@@ -32,12 +32,9 @@ implements FetchRequest<T> {
     /* ====================================================================== */
 
     @Override
-    protected final Future<Response<T>> execute(String bucket, String key)
+    protected Future<Response<T>> execute(Key key)
     throws IOException {
-        return this.execute(bucket, key, type);
+        return ((AbstractRiakClient)key.getRiakClient()).executeFetch(this, key, type);
     }
-
-    protected abstract Future<Response<T>> execute(String bucket, String key, Class<T> type)
-    throws IOException;
 
 }

@@ -17,6 +17,7 @@ package org.usrz.libs.riak;
 
 import java.io.IOException;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -93,6 +94,9 @@ public abstract class AbstractRiakClient implements RiakClient {
         return this.fetch(getBucket(bucket), key, type);
     }
 
+    protected abstract <T> Future<Response<T>> executeFetch(FetchRequest<T> request, Key key, Class<T> type)
+    throws IOException;
+
     /* ====================================================================== */
 
     @Override
@@ -102,6 +106,9 @@ public abstract class AbstractRiakClient implements RiakClient {
     public final <T> StoreRequest<T> store(String bucket, T object) {
         return this.store(getBucket(bucket), object);
     }
+
+    protected abstract <T> Future<Response<T>> executeStore(StoreRequest<T> request, Bucket bucket, T instance)
+    throws IOException;
 
     /* ---------------------------------------------------------------------- */
 
@@ -119,6 +126,9 @@ public abstract class AbstractRiakClient implements RiakClient {
         return this.store(getBucket(bucket), key, object);
     }
 
+    protected abstract <T> Future<Response<T>> executeStore(StoreRequest<T> request, Key key, T instance)
+    throws IOException;
+
     /* ====================================================================== */
 
     @Override
@@ -133,5 +143,8 @@ public abstract class AbstractRiakClient implements RiakClient {
     public final DeleteRequest delete(String bucket, String key) {
         return this.delete(getBucket(bucket), key);
     }
+
+    protected abstract Future<Response<Void>> executeDelete(DeleteRequest request, Key key)
+    throws IOException;
 
 }

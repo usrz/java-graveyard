@@ -28,7 +28,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import org.usrz.libs.logging.Log;
+import org.usrz.libs.riak.AbstractDeleteRequest;
+import org.usrz.libs.riak.AbstractFetchRequest;
 import org.usrz.libs.riak.AbstractRiakClient;
+import org.usrz.libs.riak.AbstractStoreRequest;
 import org.usrz.libs.riak.Bucket;
 import org.usrz.libs.riak.DeleteRequest;
 import org.usrz.libs.riak.FetchRequest;
@@ -65,18 +68,18 @@ public class AsyncRiakClient extends AbstractRiakClient {
     private final ObjectMapper mapper = new ObjectMapper();
     private final AsyncHttpClient client;
 
-    private final Class<AsyncFetchRequest<?>> fetchRequestClass;
-    private final Class<AsyncStoreRequest<?>> storeRequestClass;
-    private final Class<AsyncDeleteRequest> deleteRequestClass;
+    private final Class<AbstractFetchRequest<?>> fetchRequestClass;
+    private final Class<AbstractStoreRequest<?>> storeRequestClass;
+    private final Class<AbstractDeleteRequest> deleteRequestClass;
 
     public AsyncRiakClient(AsyncHttpClient client) {
         if (client == null) throw new NullPointerException("Null client");
         this.client = client;
 
         final MapperBuilder builder = new MapperBuilder();
-        fetchRequestClass = builder.newClass(AsyncFetchRequest.class);
-        storeRequestClass = builder.newClass(AsyncStoreRequest.class);
-        deleteRequestClass = builder.newClass(AsyncDeleteRequest.class);
+        fetchRequestClass = builder.newClass(AbstractFetchRequest.class);
+        storeRequestClass = builder.newClass(AbstractStoreRequest.class);
+        deleteRequestClass = builder.newClass(AbstractDeleteRequest.class);
     }
 
     /* ====================================================================== */
@@ -132,13 +135,14 @@ public class AsyncRiakClient extends AbstractRiakClient {
     @Override
     public <T> FetchRequest<T> fetch(Key key, Class<T> type) {
         log.trace("Preparing FETCH request for %s", key.getLocation());
-        return InstanceBuilder.newInstance(fetchRequestClass, this, key, type);
+        return InstanceBuilder.newInstance(fetchRequestClass, key, type);
     }
 
-    protected <T> Future<Response<T>> executeFetch(AsyncFetchRequest<T> request, String bucket, String key, Class<T> type)
+    @Override
+    protected <T> Future<Response<T>> executeFetch(FetchRequest<T> request, Key key, Class<T> type)
     throws IOException {
-        final String url = getUrl(bucket, key);
-        final Request r = build(request, client.prepareGet(url)).build();
+        final String url = getUrl(key.getBucketName(), key.getName());
+        final Request r = build((Mapper) request, client.prepareGet(url)).build();
         final AsyncResponseHandler<T> h = new AsyncResponseHandler<T>(this, type, r);
         final SettableFuture<Response<T>> f = h.getFuture();
 
@@ -152,31 +156,44 @@ public class AsyncRiakClient extends AbstractRiakClient {
     @Override
     public <T> StoreRequest<T> store(Bucket bucket, T object) {
         log.trace("Preparing STORE request for %s (no key)", bucket.getLocation());
-        return InstanceBuilder.newInstance(storeRequestClass, this, bucket, object);
+        return InstanceBuilder.newInstance(storeRequestClass, bucket, object, getIntrospector());
     }
 
     @Override
     public <T> StoreRequest<T> store(Key key, T object) {
         log.trace("Preparing STORE request for %s (no key)", key.getLocation());
-        return InstanceBuilder.newInstance(storeRequestClass, this, key, object);
+        return InstanceBuilder.newInstance(storeRequestClass, key, object, getIntrospector());
     }
 
-
-    protected <T> Future<Response<T>> executeStore(AsyncStoreRequest<T> request, String bucket, String key, T instance)
+    @Override
+    protected <T> Future<Response<T>> executeStore(StoreRequest<T> request, Bucket bucket, T instance)
     throws IOException {
+        return this.executeStore(request, bucket, null, instance);
+    }
+
+    @Override
+    protected <T> Future<Response<T>> executeStore(StoreRequest<T> request, Key key, T instance)
+    throws IOException {
+        return this.executeStore(request, key.getBucket(), key.getName(), instance);
+    }
+
+    // TODO rewrite, and avoid unnecessary casts!
+    private <T> Future<Response<T>> executeStore(StoreRequest<T> request, Bucket bucket, String key, T instance)
+    throws IOException {
+        final Map<String, ?> properties = ((Mapper)request).mappedProperties();
+
         @SuppressWarnings("unchecked")
         final Class<T> type = (Class<T>) instance.getClass();
-        final String url = getUrl(bucket, key);
+        final String url = getUrl(bucket.getName(), key);
         final BoundRequestBuilder b = build(request.getIndexMap(),
                                       build(request.getLinksMap(),
                                       build(request.getMetadata(),
-                                      build(request, key == null ?
+                                      build((Mapper) request, key == null ?
                                               client.preparePost(url) :
                                               client.preparePut(url)
                                           ))));
 
         /* Return body (default is TRUE) */
-        final Map<String, ?> properties = request.mappedProperties();
         if (!properties.containsKey("returnBody")) b.addQueryParameter("returnbody", "true");
 
         /* Vector clock (if any) */
@@ -214,13 +231,14 @@ public class AsyncRiakClient extends AbstractRiakClient {
     @Override
     public DeleteRequest delete(Key key) {
         log.trace("Preparing DELETE request for %s", key.getLocation());
-        return InstanceBuilder.newInstance(deleteRequestClass, this, key);
+        return InstanceBuilder.newInstance(deleteRequestClass, key);
     }
 
-    protected Future<Response<Void>> executeDelete(AsyncDeleteRequest request, String bucket, String key)
+    @Override
+    protected Future<Response<Void>> executeDelete(DeleteRequest request, Key key)
     throws IOException {
-        final String url = getUrl(bucket, key);
-        final Request r = build(request, client.prepareDelete(url)).build();
+        final String url = getUrl(key.getBucketName(), key.getName());
+        final Request r = build((Mapper) request, client.prepareDelete(url)).build();
         final AsyncResponseHandler<Void> h = new AsyncResponseHandler<Void>(this, null, r);
         final SettableFuture<Response<Void>> f = h.getFuture();
 
@@ -231,6 +249,7 @@ public class AsyncRiakClient extends AbstractRiakClient {
 
     /* ====================================================================== */
 
+    // TODO TODO TODO
     private String getUrl(String bucket, String key) {
         final StringBuilder builder = new StringBuilder("http://127.0.0.1:4198/buckets/");
         if (bucket != null) {
@@ -319,10 +338,4 @@ public class AsyncRiakClient extends AbstractRiakClient {
                               RiakUtils.encode(entry.getValue()));
         return builder;
     }
-
-    /* ====================================================================== */
-    /* ====================================================================== */
-    /* ====================================================================== */
-    /* ====================================================================== */
-
 }

@@ -43,6 +43,7 @@ public final class Key implements RiakLocation {
     }
 
     public Key(Bucket bucket, String key) {
+        if (bucket == null) throw new NullPointerException("Null bucket");
         if (key == null) throw new NullPointerException("Null key");
         if (key.length() == 0) throw new IllegalArgumentException("Empty key");
 

@@ -16,6 +16,7 @@
 package org.usrz.libs.riak;
 
 import java.io.IOException;
+import java.util.concurrent.Future;
 
 import org.usrz.libs.riak.utils.IterableFuture;
 
@@ -48,6 +49,26 @@ public class FakeClient extends AbstractRiakClient {
 
     @Override
     public DeleteRequest delete(Key key) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    protected <T> Future<Response<T>> executeFetch(FetchRequest<T> request, Key key, Class<T> type) throws IOException {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    protected <T> Future<Response<T>> executeStore(StoreRequest<T> request, Bucket bucket, T instance) throws IOException {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    protected <T> Future<Response<T>> executeStore(StoreRequest<T> request, Key key, T instance) throws IOException {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    protected Future<Response<Void>> executeDelete(DeleteRequest request, Key key) throws IOException {
         throw new UnsupportedOperationException();
     }
 

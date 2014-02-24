@@ -15,12 +15,23 @@
  * ========================================================================== */
 package org.usrz.libs.riak;
 
+import java.io.IOException;
+import java.util.concurrent.Future;
+
 public abstract class AbstractDeleteRequest
-extends AbstractBucketRequest<Void, DeleteRequest>
+extends AbstractRequest<Void, DeleteRequest>
 implements DeleteRequest {
 
     protected AbstractDeleteRequest(Key key) {
         super(key);
+    }
+
+    /* ====================================================================== */
+
+    @Override
+    protected Future<Response<Void>> execute(Key key)
+    throws IOException {
+        return ((AbstractRiakClient)key.getRiakClient()).executeDelete(this, key);
     }
 
 }
