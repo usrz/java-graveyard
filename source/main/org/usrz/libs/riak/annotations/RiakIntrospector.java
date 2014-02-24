@@ -241,13 +241,27 @@ public class RiakIntrospector {
     /* ====================================================================== */
 
     public RiakIntrospector setKey(Object instance, String key) {
-        //TODO
-        throw new UnsupportedOperationException();
+        final IntrospectionDescriptor<Object> descriptor = descriptor(instance);
+
+        for (Entry<RiakKey, Set<IntrospectedProperty<Object>>> entry: descriptor.getProperties(RiakKey.class).entrySet()) {
+            for (IntrospectedProperty<Object> property: entry.getValue()) {
+                if (property.canWrite()) property.write(instance, key);
+            }
+        }
+
+        return this;
     }
 
-    public RiakIntrospector setBucket(Object instance, String bucket) {
-        //TODO
-        throw new UnsupportedOperationException();
+    public <T> RiakIntrospector setBucket(T instance, String bucket) {
+        final IntrospectionDescriptor<T> descriptor = descriptor(instance);
+
+        for (Entry<RiakBucket, Set<IntrospectedProperty<T>>> entry: descriptor.getProperties(RiakBucket.class).entrySet()) {
+            for (IntrospectedProperty<T> property: entry.getValue()) {
+                if (property.canWrite()) property.write(instance, bucket);
+            }
+        }
+
+        return this;
     }
 
     public RiakIntrospector setReference(Object instance, Reference reference) {
