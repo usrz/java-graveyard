@@ -30,20 +30,4 @@ public enum IndexType {
         return suffix;
     }
 
-    public static Index parseHeaderName(final String header) {
-        final String normalized = header.toLowerCase();
-        final int start = normalized.startsWith("x-riak-index-") ? 13 : 0;
-
-        for (IndexType type: IndexType.values()) {
-            if (type.suffix == null) continue;
-            if (!normalized.endsWith(type.suffix)) continue;
-            final int end = normalized.length() - type.suffix.length();
-            final String name = normalized.substring(start, end);
-            if (name.length() == 0) continue;
-            return new Index(name, type);
-        }
-
-        throw new IllegalArgumentException("Invalid Riak index name \"" + header + "\"");
-    }
-
 }

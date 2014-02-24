@@ -15,12 +15,33 @@
  * ========================================================================== */
 package org.usrz.libs.riak;
 
-
+import org.usrz.libs.riak.utils.RiakUtils;
 
 public class Index {
 
     private final String name;
     private final IndexType type;
+
+    public Index(String header) {
+        if (header == null) throw new NullPointerException("Null header name");
+
+        final String normalized = header.toLowerCase().trim();
+        final int start = normalized.startsWith("x-riak-index-") ? 13 : 0;
+
+        for (IndexType type: IndexType.values()) {
+            final String suffix = type.getSuffix();
+            if (suffix == null) continue;
+            if (!normalized.endsWith(suffix)) continue;
+            final int end = normalized.length() - suffix.length();
+            final String name = normalized.substring(start, end);
+            if (name.length() == 0) continue;
+            this.name = RiakUtils.decode(name);
+            this.type = type;
+            return;
+        }
+
+        throw new IllegalArgumentException("Invalid Riak index name \"" + header + "\"");
+    }
 
     public Index(String name, IndexType type) {
         if (name == null) throw new NullPointerException("Null name");
