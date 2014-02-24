@@ -49,12 +49,12 @@ public class Bucket implements RiakLocation {
         return "/buckets/" + RiakUtils.encode(name) + "/";
     }
 
-    public IterableFuture<String> getKeys()
+    public IterableFuture<String> getKeyNames()
     throws IOException {
         return client.getKeyNames(name);
     }
 
-    public IterableFuture<Key> getReferences()
+    public IterableFuture<Key> getKeys()
     throws IOException {
         return client.getKeys(name);
     }

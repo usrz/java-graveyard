@@ -34,9 +34,9 @@ import java.util.regex.Pattern;
 
 import org.usrz.libs.logging.Log;
 import org.usrz.libs.riak.IndexMapBuilder;
+import org.usrz.libs.riak.Key;
 import org.usrz.libs.riak.LinksMapBuilder;
 import org.usrz.libs.riak.MetadataBuilder;
-import org.usrz.libs.riak.Key;
 import org.usrz.libs.riak.Response;
 import org.usrz.libs.riak.SiblingsException;
 import org.usrz.libs.riak.utils.SettableFuture;
@@ -160,10 +160,10 @@ public class AsyncResponseHandler<T> implements AsyncHandler<Void> {
         /* All the rest (location, last modified, indexes, metadata, .. only if successful */
         if (!response.isSuccessful()) return STATE.CONTINUE;
 
-        /* Set up our reference */
+        /* Set up our key */
         final String location = map.getFirstValue("Location");
         final URI locationUri = location == null ? headers.getUrl() : headers.getUrl().resolve(location);
-        response.setReference(new Key(client, locationUri.getRawPath()));
+        response.setKey(new Key(client, locationUri.getRawPath()));
 
         /* Set up our last modified date */
         final String lastModified = map.getFirstValue("Last-Modified");
@@ -285,7 +285,7 @@ public class AsyncResponseHandler<T> implements AsyncHandler<Void> {
 
         @Override
         public T call() throws Exception {
-            final Key reference = new Key(client, request.getRawUrl());
+            final Key key = new Key(client, request.getRawUrl());
             final Scanner scanner = new Scanner(input, "UTF8");
             final Set<String> siblings = new HashSet<String>();
             try {
@@ -295,7 +295,7 @@ public class AsyncResponseHandler<T> implements AsyncHandler<Void> {
                     if ("Siblings:".equalsIgnoreCase(sibling)) continue;
                     siblings.add(sibling);
                 }
-                throw new SiblingsException(reference, siblings);
+                throw new SiblingsException(key, siblings);
             } finally {
                 scanner.close();
             }

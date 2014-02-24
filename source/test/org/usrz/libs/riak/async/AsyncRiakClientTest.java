@@ -44,16 +44,16 @@ public class AsyncRiakClientTest extends AbstractTest {
         final AsyncRiakClient client = new AsyncRiakClient(new AsyncHttpClient());
 
         int buckets = 0;
-        int references = 0;
+        int keys = 0;
         for (Bucket bucket: client.getBuckets()) {
             buckets ++;
             log.debug("Found bucket \"%s\"", bucket.getName());
-            for (Key reference: bucket.getReferences()) {
-                references ++;
-                log.debug("   in bucket \"%s\" found key \"%s\"", reference.getBucket(), reference.getKey() );
+            for (Key key: bucket.getKeys()) {
+                keys ++;
+                log.debug("   in bucket \"%s\" found key \"%s\"", key.getBucket(), key.getKey() );
             }
         }
-        log.info("Found a total of %d buckets and %d keys", buckets, references);
+        log.info("Found a total of %d buckets and %d keys", buckets, keys);
     }
 
     @Test(groups="local")
@@ -77,7 +77,7 @@ public class AsyncRiakClientTest extends AbstractTest {
 
         /* Modify what we've created */
         object.setValue("foobar2");
-        final Future<Response<TestObject>> storeFuture2 = bucket.store(object, storeResponse1.getKey()).execute();
+        final Future<Response<TestObject>> storeFuture2 = bucket.store(object, storeResponse1.getKeyName()).execute();
         final Response<TestObject> storeResponse2 = storeFuture2.get();
 
         log.info("Store 2: status=%d success=%b entity=%s", storeResponse2.getStatus(), storeResponse2.isSuccessful(), storeResponse2.getEntity());
@@ -85,10 +85,10 @@ public class AsyncRiakClientTest extends AbstractTest {
         assertEquals(storeResponse2.isSuccessful(), true);
         assertEquals(storeResponse2.getEntity(), object);
         assertNotSame(storeResponse2.getEntity(), object);
-        assertEquals(storeResponse2.getReference(), storeResponse1.getReference());
+        assertEquals(storeResponse2.getKey(), storeResponse1.getKey());
 
         /* Fetch what we've created */
-        final Future<Response<TestObject>> fetchFuture1 = bucket.fetch(storeResponse2.getKey(), TestObject.class).execute();
+        final Future<Response<TestObject>> fetchFuture1 = bucket.fetch(storeResponse2.getKeyName(), TestObject.class).execute();
         final Response<TestObject> fetchResponse1 = fetchFuture1.get();
 
         log.info("Fetch 1: status=%d success=%b entity=%s", fetchResponse1.getStatus(), fetchResponse1.isSuccessful(), fetchResponse1.getEntity());
@@ -96,35 +96,35 @@ public class AsyncRiakClientTest extends AbstractTest {
         assertEquals(fetchResponse1.isSuccessful(), true);
         assertEquals(fetchResponse1.getEntity(), object);
         assertNotSame(fetchResponse1.getEntity(), object);
-        assertEquals(fetchResponse1.getReference(), storeResponse2.getReference());
+        assertEquals(fetchResponse1.getKey(), storeResponse2.getKey());
 
         /* Fetch something that does NOT exist (no exceptions!) */
-        final Future<Response<TestObject>> fetchFuture2 = bucket.fetch(fetchResponse1.getKey() + "_foobar", TestObject.class).execute();
+        final Future<Response<TestObject>> fetchFuture2 = bucket.fetch(fetchResponse1.getKeyName() + "_foobar", TestObject.class).execute();
         final Response<TestObject> fetchResponse2 = fetchFuture2.get();
 
         log.info("Fetch 2: status=%d success=%b entity=%s", fetchResponse2.getStatus(), fetchResponse2.isSuccessful(), fetchResponse2.getEntity());
         assertEquals(fetchResponse2.getStatus(), 404);
         assertEquals(fetchResponse2.isSuccessful(), false);
         assertNull(fetchResponse2.getEntity());
-        assertNull(fetchResponse2.getReference());
+        assertNull(fetchResponse2.getKey());
 
         /* Delete what we've created */
-        final Future<Response<Void>> deleteFuture1 = bucket.delete(fetchResponse1.getKey()).execute();
+        final Future<Response<Void>> deleteFuture1 = bucket.delete(fetchResponse1.getKeyName()).execute();
         final Response<Void> deleteResponse1 = deleteFuture1.get();
         log.info("Delete 1: status=%d success=%b entity=%s", deleteResponse1.getStatus(), deleteResponse1.isSuccessful(), deleteResponse1.getEntity());
         assertEquals(deleteResponse1.getStatus(), 204);
         assertEquals(deleteResponse1.isSuccessful(), true);
         assertNull(deleteResponse1.getEntity());
-        assertEquals(deleteResponse1.getReference(), fetchResponse1.getReference());
+        assertEquals(deleteResponse1.getKey(), fetchResponse1.getKey());
 
         /* Attempt to delete again, we should not fail */
-        final Future<Response<Void>> deleteFuture2 = bucket.delete(deleteResponse1.getKey()).execute();
+        final Future<Response<Void>> deleteFuture2 = bucket.delete(deleteResponse1.getKeyName()).execute();
         final Response<Void> deleteResponse2 = deleteFuture2.get();
         log.info("Delete 2: status=%d success=%b entity=%s", deleteResponse2.getStatus(), deleteResponse2.isSuccessful(), deleteResponse2.getEntity());
         assertEquals(deleteResponse2.getStatus(), 404);
         assertEquals(deleteResponse2.isSuccessful(), false);
         assertNull(deleteResponse2.getEntity());
-        assertNull(deleteResponse2.getReference());
+        assertNull(deleteResponse2.getKey());
     }
 
     /* ====================================================================== */
@@ -197,8 +197,8 @@ public class AsyncRiakClientTest extends AbstractTest {
         assertTrue(storeResponse2.getMetadata().isEmpty());
 
 
-        client.delete(storeResponse1.getReference()).execute().get();
-        client.delete(storeResponse2.getReference()).execute().get();
+        client.delete(storeResponse1.getKey()).execute().get();
+        client.delete(storeResponse2.getKey()).execute().get();
 
     }
 

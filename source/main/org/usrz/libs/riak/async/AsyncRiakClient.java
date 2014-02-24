@@ -282,8 +282,8 @@ public class AsyncRiakClient extends AbstractRiakClient {
     private BoundRequestBuilder build(LinksMap linksMap, BoundRequestBuilder builder) {
         for (Entry<String, Set<Key>> entry: linksMap.entrySet()) {
             final String tag = entry.getKey();
-            for (Key reference: entry.getValue()) {
-                final String location = reference.getLocation();
+            for (Key key: entry.getValue()) {
+                final String location = key.getLocation();
                 builder.addHeader("Link", "<" + location + ">; riaktag=\"" + tag + "\"");
             }
         }

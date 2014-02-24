@@ -27,11 +27,11 @@ import org.usrz.libs.riak.Bucket;
 import org.usrz.libs.riak.FakeClient;
 import org.usrz.libs.riak.IndexMap;
 import org.usrz.libs.riak.IndexMapBuilder;
+import org.usrz.libs.riak.Key;
 import org.usrz.libs.riak.LinksMap;
 import org.usrz.libs.riak.LinksMapBuilder;
 import org.usrz.libs.riak.Metadata;
 import org.usrz.libs.riak.MetadataBuilder;
-import org.usrz.libs.riak.Key;
 import org.usrz.libs.riak.RiakClient;
 import org.usrz.libs.testing.AbstractTest;
 
@@ -45,7 +45,7 @@ public class RiakIntrospectorTest extends AbstractTest {
     @Test
     public void testEmptyObject() {
         final Object object = new Object();
-        assertNull(introspector.getKey(object));
+        assertNull(introspector.getKeyName(object));
         assertNull(introspector.getBucket(object));
         assertTrue(introspector.getIndexMap(object).isEmpty());
         assertTrue(introspector.getLinksMap(object).isEmpty());
@@ -59,9 +59,9 @@ public class RiakIntrospectorTest extends AbstractTest {
 
         final IntrospectableObject object = new IntrospectableObject();
 
-        assertEquals(introspector.getKey(object), "myKey");
+        assertEquals(introspector.getKeyName(object), "myKey");
         assertEquals(introspector.getBucket(object), "myBucket");
-        assertEquals(introspector.getReference(object), new Key(client, "myBucket", "myKey"));
+        assertEquals(introspector.getKey(object), new Key(client, "myBucket", "myKey"));
 
         final IndexMap index = introspector.getIndexMap(object);
         assertEquals(index.size(), 4);
@@ -102,8 +102,8 @@ public class RiakIntrospectorTest extends AbstractTest {
         final LinksMap links = introspector.getLinksMap(object);
         assertEquals(links.size(), 6);
 
-        assertTrue(links.containsValue("referencelink",       new Key(client, "myLinkedBucket1", "myLinkedKey1")));
-        assertTrue(links.containsValue("referenceoverridden", new Key(client, "myLinkedBucket2", "myLinkedKey2")));
+        assertTrue(links.containsValue("keylink",             new Key(client, "myLinkedBucket1", "myLinkedKey1")));
+        assertTrue(links.containsValue("keyoverridden",       new Key(client, "myLinkedBucket2", "myLinkedKey2")));
         assertTrue(links.containsValue("newstringlink",       new Key(client, "myLinkedBucket3", "myLinkedKey3")));
         assertTrue(links.containsValue("oldstringlink",       new Key(client, "myLinkedBucket4", "myLinkedKey4")));
         assertTrue(links.containsValue("introspectedlink",    new Key(client, "myBucket",        "myKey")));
@@ -158,10 +158,10 @@ public class RiakIntrospectorTest extends AbstractTest {
         private final String getThisIsHidden() { return "metadataValue2"; };
 
         @RiakLink
-        private final Key getReferenceLink() { return new Key(client, "myLinkedBucket1", "myLinkedKey1"); }
+        private final Key getKeyLink() { return new Key(client, "myLinkedBucket1", "myLinkedKey1"); }
 
-        @RiakLink("referenceOverridden")
-        private final Key getReferenceLink2() { return new Key(client, "myLinkedBucket2", "myLinkedKey2"); }
+        @RiakLink("keyOverridden")
+        private final Key getKeyLink2() { return new Key(client, "myLinkedBucket2", "myLinkedKey2"); }
 
         @RiakLink
         private final String getNewStringLink() { return "/buckets/myLinkedBucket3/keys/myLinkedKey3"; }
@@ -191,7 +191,7 @@ public class RiakIntrospectorTest extends AbstractTest {
 
     /* ====================================================================== */
 
-    private final Key reference = new Key(client, "myBucket", "myKey");
+    private final Key key = new Key(client, "myBucket", "myKey");
     private final LinksMap linksMap = new LinksMapBuilder(client).add("linkTag1", new Key(client, "linkBucket1", "linkKey1"))
                                                                  .add("linkTag2", new Key(client, "linkBucket2", "linkKey2"))
                                                                  .build();
@@ -203,17 +203,17 @@ public class RiakIntrospectorTest extends AbstractTest {
                                                            .build();
 
 //    @Test
-//    public void testReference() {
-//        final ReferenceObject object = new ReferenceObject();
-//        assertNull(object.reference);
-//        introspector.setReference(object, reference);
-//        assertSame(object.reference, reference);
-//        final Reference gotten = introspector.getReference(object);
-//        assertSame(gotten, reference);
+//    public void testKey() {
+//        final KeyObject object = new KeyObject();
+//        assertNull(object.key);
+//        introspector.setKey(object, key);
+//        assertSame(object.key, key);
+//        final Key gotten = introspector.getKey(object);
+//        assertSame(gotten, key);
 //    }
 //
-//    private class ReferenceObject {
-//        @RiakKey private Reference reference;
+//    private class KeyObject {
+//        @RiakKey private Key key;
 //    }
 
     /* ====================================================================== */
@@ -222,7 +222,7 @@ public class RiakIntrospectorTest extends AbstractTest {
     public void testEmptyInstrumentation() {
         /* Thou shall not explode! */
         final Object object = new Object();
-        introspector.setReference(object, reference);
+        introspector.setKey(object, key);
         introspector.setIndexMap(object, indexMap);
         introspector.setLinksMap(object, linksMap);
         introspector.setMetadata(object, metadata);
@@ -231,9 +231,9 @@ public class RiakIntrospectorTest extends AbstractTest {
     @Test
     public void testSimpleInstrumentationKB() {
         final SimpleInstrumentableKB object = new SimpleInstrumentableKB();
-        introspector.setReference(object, reference);
-        assertEquals(object.k, reference.getKey());
-        assertEquals(object.b.getName(), reference.getBucket());
+        introspector.setKey(object, key);
+        assertEquals(object.k, key.getKey());
+        assertEquals(object.b.getName(), key.getBucket());
     }
 
     private class SimpleInstrumentableKB {
@@ -244,9 +244,9 @@ public class RiakIntrospectorTest extends AbstractTest {
     @Test
     public void testSimpleInstrumentationKBS() {
         final SimpleInstrumentableKBS object = new SimpleInstrumentableKBS();
-        introspector.setReference(object, reference);
-        assertEquals(object.k, reference.getKey());
-        assertEquals(object.b, reference.getBucket());
+        introspector.setKey(object, key);
+        assertEquals(object.k, key.getKey());
+        assertEquals(object.b, key.getBucket());
     }
 
     private class SimpleInstrumentableKBS {
@@ -255,14 +255,14 @@ public class RiakIntrospectorTest extends AbstractTest {
     }
 
 //    @Test
-//    public void testSimpleInstrumentationR() {
-//        final SimpleInstrumentableR object = new SimpleInstrumentableKBS();
-//        introspector.setReference(object, reference);
-//        assertEquals(object.k, reference.getKey());
-//        assertEquals(object.b, reference.getBucket());
+//    public void testSimpleInstrumentationK() {
+//        final SimpleInstrumentableK object = new SimpleInstrumentableK();
+//        introspector.setKey(object, key);
+//        assertEquals(object.k, key.getKey());
+//        assertEquals(object.b, key.getBucket());
 //    }
 //
-//    private class SimpleInstrumentableR {
+//    private class SimpleInstrumentableK {
 //        private String k; @RiakKey    public void setK(String k) { this.k = k; };
 //        private String b; @RiakBucket public void setB(String b) { this.b = b; };
 //    }

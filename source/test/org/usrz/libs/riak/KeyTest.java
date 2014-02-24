@@ -18,19 +18,19 @@ package org.usrz.libs.riak;
 import org.testng.annotations.Test;
 import org.usrz.libs.testing.AbstractTest;
 
-public class ReferenceTest extends AbstractTest {
+public class KeyTest extends AbstractTest {
 
     private final RiakClient client = new FakeClient();
 
     @Test
     public void testEncoded() {
-        final Key reference = new Key(client, "/buckets/dev%40usrz/keys/f%C3%BCbar");
-        assertEquals(reference.getBucket(), "dev@usrz");
-        assertEquals(reference.getKey(), "f\u00FCbar");
+        final Key key = new Key(client, "/buckets/dev%40usrz/keys/f%C3%BCbar");
+        assertEquals(key.getBucket(), "dev@usrz");
+        assertEquals(key.getKey(), "f\u00FCbar");
     }
 
     @Test
-    public void testReferences() {
+    public void testKeys() {
         for (String string: new String[] { "/riak/mybucket/mykey",
                                            "/riak/mybucket/mykey/",
                                            "/buckets/mybucket/keys/mykey",
@@ -39,13 +39,13 @@ public class ReferenceTest extends AbstractTest {
                                            "http://127.0.0.1:1234/riak/mybucket/mykey/",
                                            "http://127.0.0.1:1234/buckets/mybucket/keys/mykey",
                                            "http://127.0.0.1:1234/buckets/mybucket/keys/mykey/" }) {
-            final Key reference1 = new Key(client, string);
-            assertEquals(reference1.getBucket(), "mybucket");
-            assertEquals(reference1.getKey(), "mykey");
+            final Key key1 = new Key(client, string);
+            assertEquals(key1.getBucket(), "mybucket");
+            assertEquals(key1.getKey(), "mykey");
 
-            final Key reference2 = new Key(client, string + "?foo=bar");
-            assertEquals(reference2.getBucket(), "mybucket");
-            assertEquals(reference2.getKey(), "mykey");
+            final Key key2 = new Key(client, string + "?foo=bar");
+            assertEquals(key2.getBucket(), "mybucket");
+            assertEquals(key2.getKey(), "mykey");
         }
     }
 }

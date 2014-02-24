@@ -46,7 +46,7 @@ public interface RiakClient {
 
     public <T> FetchRequest<T> fetch(Bucket bucket, String key, Class<T> type);
 
-    public <T> FetchRequest<T> fetch(Key reference, Class<T> type);
+    public <T> FetchRequest<T> fetch(Key key, Class<T> type);
 
 
     public <T> StoreRequest<T> store(String bucket, T object);
@@ -57,12 +57,12 @@ public interface RiakClient {
 
     public <T> StoreRequest<T> store(Bucket bucket, String key, T object);
 
-    public <T> StoreRequest<T> store(Key reference, T object);
+    public <T> StoreRequest<T> store(Key key, T object);
 
 
     public DeleteRequest delete(String bucket, String key);
 
     public DeleteRequest delete(Bucket bucket, String key);
 
-    public DeleteRequest delete(Key reference);
+    public DeleteRequest delete(Key key);
 }

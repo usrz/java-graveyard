@@ -29,11 +29,11 @@ public interface Response<T> extends RiakClientAware {
 
     public Date getLastModified();
 
-    public Key getReference();
+    public Key getKey();
 
     public String getBucket();
 
-    public String  getKey();
+    public String  getKeyName();
 
     public boolean isSuccessful();
 

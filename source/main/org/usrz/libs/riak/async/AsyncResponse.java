@@ -32,7 +32,7 @@ public class AsyncResponse<T> implements Response<T> {
 
     private String vectorClock;
     private Date lastModified;
-    private Key reference;
+    private Key key;
     private boolean successful;
     private int status;
     private T entity;
@@ -77,18 +77,18 @@ public class AsyncResponse<T> implements Response<T> {
     }
 
     @Override
-    public Key getReference() {
-        return reference;
+    public Key getKey() {
+        return key;
     }
 
     @Override
     public String getBucket() {
-        return reference == null ? null : reference.getBucket();
+        return key == null ? null : key.getBucket();
     }
 
     @Override
-    public String getKey() {
-        return reference == null ? null : reference.getKey();
+    public String getKeyName() {
+        return key == null ? null : key.getKey();
     }
 
     @Override
@@ -114,8 +114,8 @@ public class AsyncResponse<T> implements Response<T> {
         this.lastModified = lastModified;
     }
 
-    protected void setReference(Key reference) {
-        this.reference = reference;
+    protected void setKey(Key key) {
+        this.key = key;
     }
 
     protected void setSuccessful(boolean successful) {
