@@ -15,19 +15,13 @@
  * ========================================================================== */
 package org.usrz.libs.riak.async;
 
-import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
-import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 
 import org.usrz.libs.logging.Log;
+import org.usrz.libs.riak.response.ChunksResponseHandler;
 import org.usrz.libs.riak.utils.QueuedIterableFuture;
 
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.MappingIterator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ning.http.client.AsyncHandler;
 import com.ning.http.client.HttpResponseBodyPart;
@@ -62,9 +56,10 @@ public class AsyncChunkedHandler implements AsyncHandler<Void> {
         /* Don't check for status, just go */
         log.trace("Received status for %s: %d", status.getUrl(), status.getStatusCode());
         if (status.getStatusCode() == 200) {
-            final PipedInputStream input = new PipedInputStream();
-            output = new PipedOutputStream(input);
-            future = client.getExecutorService().submit(new Parser(input));
+            final ObjectMapper mapper = client.getObjectMapper();
+            final ChunksResponseHandler handler = new ChunksResponseHandler(mapper, iterable);
+            output = handler.getOutputStream();
+            future = client.getExecutorService().submit(handler);
             iterable.addFuture(future);
 
             return STATE.CONTINUE;
@@ -107,45 +102,4 @@ public class AsyncChunkedHandler implements AsyncHandler<Void> {
     public void onThrowable(Throwable throwable) {
         log.error(throwable, "Exception detected for %s", request.getUrl());
     }
-
-    /* ====================================================================== */
-
-    public class Parser implements Callable<Void> {
-
-        private final InputStream input;
-
-        public Parser(InputStream input) {
-            this.input = input;
-        }
-
-        @Override
-        public Void call()
-        throws Exception {
-            try {
-                final ObjectMapper mapper = client.getObjectMapper();
-                final JsonParser parser = mapper.getFactory().createParser(input);
-                final MappingIterator<JsonNode> iterator = mapper.readValues(parser, JsonNode.class);
-                while (iterator.hasNextValue()) {
-                    final JsonNode bucketsOrKeys = iterator.next();
-                    for (JsonNode arrayOrString: bucketsOrKeys) {
-                        if (arrayOrString.isTextual()) {
-                            iterable.put(arrayOrString.asText());
-                        } else if (arrayOrString.isArray()) {
-                            for (JsonNode arrayValue: arrayOrString) {
-                                iterable.put(arrayValue.asText());
-                            }
-                        }
-                    }
-                }
-                iterable.close();
-                return null;
-            } catch (Exception exception) {
-                iterable.fail(exception);
-                throw exception;
-            } finally {
-                input.close();
-            }
-        }
-    }
-
 }

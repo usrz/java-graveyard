@@ -27,30 +27,37 @@ public abstract class AbstractRequest<T, R extends Request<T>
 implements Request<T>, KeyedRequest<T, R>, BucketedRequest<T, R> {
 
     private final R thisInstance;
+    protected final ResponseHandler<T> handler;
     protected Bucket bucket;
     protected Key key;
 
     @SuppressWarnings("unchecked")
-    protected AbstractRequest(Key key) {
+    protected AbstractRequest(Key key, ResponseHandler<T> handler) {
+        if (handler == null) throw new NullPointerException("Null response handler");
         if (key == null) throw new NullPointerException("Null key");
         this.bucket = key.getBucket();
         this.key = key;
+        this.handler = handler;
         thisInstance = (R) this;
     }
 
     @SuppressWarnings("unchecked")
-    protected AbstractRequest(Bucket bucket) {
+    protected AbstractRequest(Bucket bucket, ResponseHandler<T> handler) {
+        if (handler == null) throw new NullPointerException("Null response handler");
         if (bucket == null) throw new NullPointerException("Null bucket");
         this.bucket = bucket;
         this.key = null;
+        this.handler = handler;
         thisInstance = (R) this;
     }
 
     @SuppressWarnings("unchecked")
-    protected AbstractRequest(Bucket bucket, String key) {
+    protected AbstractRequest(Bucket bucket, String key, ResponseHandler<T> handler) {
+        if (handler == null) throw new NullPointerException("Null response handler");
         if (bucket == null) throw new NullPointerException("Null bucket");
         this.key = key == null ? null : new Key(bucket, key);
         this.bucket = bucket;
+        this.handler = handler;
         thisInstance = (R) this;
     }
 

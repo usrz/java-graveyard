@@ -41,6 +41,7 @@ public interface RiakClient {
     public IterableFuture<Key> getKeys(String bucket)
     throws IOException;
 
+    /* ====================================================================== */
 
     public <T> FetchRequest<T> fetch(String bucket, String key, Class<T> type);
 
@@ -48,6 +49,13 @@ public interface RiakClient {
 
     public <T> FetchRequest<T> fetch(Key key, Class<T> type);
 
+    public <T> FetchRequest<T> fetch(String bucket, String key, ResponseHandler<T> handler);
+
+    public <T> FetchRequest<T> fetch(Bucket bucket, String key, ResponseHandler<T> handler);
+
+    public <T> FetchRequest<T> fetch(Key key, ResponseHandler<T> handler);
+
+    /* ====================================================================== */
 
     public <T> StoreRequest<T> store(String bucket, T object);
 
@@ -59,6 +67,17 @@ public interface RiakClient {
 
     public <T> StoreRequest<T> store(Key key, T object);
 
+    public <T> StoreRequest<T> store(String bucket, T object, ResponseHandler<T> handler);
+
+    public <T> StoreRequest<T> store(Bucket bucket, T object, ResponseHandler<T> handler);
+
+    public <T> StoreRequest<T> store(String bucket, String key, T object, ResponseHandler<T> handler);
+
+    public <T> StoreRequest<T> store(Bucket bucket, String key, T object, ResponseHandler<T> handler);
+
+    public <T> StoreRequest<T> store(Key key, T object, ResponseHandler<T> handler);
+
+    /* ====================================================================== */
 
     public DeleteRequest delete(String bucket, String key);
 

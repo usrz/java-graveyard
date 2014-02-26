@@ -22,11 +22,8 @@ public abstract class AbstractFetchRequest<T>
 extends AbstractRequest<T, FetchRequest<T>>
 implements FetchRequest<T> {
 
-    private final Class<T> type;
-
-    protected AbstractFetchRequest(Key key, Class<T> type) {
-        super(key);
-        this.type = type;
+    protected AbstractFetchRequest(Key key, ResponseHandler<T> handler) {
+        super(key, handler);
     }
 
     /* ====================================================================== */
@@ -34,7 +31,7 @@ implements FetchRequest<T> {
     @Override
     protected Future<Response<T>> execute(Key key)
     throws IOException {
-        return ((AbstractRiakClient)key.getRiakClient()).executeFetch(this, key, type);
+        return ((AbstractRiakClient)key.getRiakClient()).executeFetch(this, key, handler);
     }
 
 }

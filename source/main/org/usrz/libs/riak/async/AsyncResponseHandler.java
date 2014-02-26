@@ -29,8 +29,8 @@ import org.usrz.libs.riak.Key;
 import org.usrz.libs.riak.LinksMapBuilder;
 import org.usrz.libs.riak.MetadataBuilder;
 import org.usrz.libs.riak.Response;
+import org.usrz.libs.riak.ResponseHandler;
 import org.usrz.libs.riak.response.ErrorResponseHandler;
-import org.usrz.libs.riak.response.JsonResponseHandler;
 import org.usrz.libs.riak.response.SiblingsResponseHandler;
 import org.usrz.libs.riak.utils.SettableFuture;
 
@@ -47,22 +47,21 @@ public class AsyncResponseHandler<T> implements AsyncHandler<Void> {
 
     // https://github.com/AsyncHttpClient/async-http-client/issues/489
     private final SettableFuture<Response<T>> settable = new SettableFuture<Response<T>>();
+
+    private final ResponseHandler<T> handler;
     private final AsyncResponse<T> response;
     private final AsyncRiakClient client;
-    private final Class<T> type;
     private final Request request;
 
     private OutputStream output = null;
     private Future<T> future = null;
 
-    protected AsyncResponseHandler(AsyncRiakClient client, Class<T> type, Request request) {
+    protected AsyncResponseHandler(AsyncRiakClient client, ResponseHandler<T> handler, Request request) {
         log.trace("Handler for %s on %s created", request.getMethod(), request.getUrl());
         if (client == null) throw new NullPointerException("Null client");
         this.response = new AsyncResponse<T>(client);
         this.client = client;
-        this.type = type == Void.class ? null :
-                    type == void.class ? null :
-                    type;
+        this.handler = handler;
         this.request = request;
     }
 
@@ -117,9 +116,8 @@ public class AsyncResponseHandler<T> implements AsyncHandler<Void> {
         if (response.isSuccessful()) {
 
             /* Parse only if we have some content (200 and 201, a type and content length) */
-            if ((type != null) && ((statusCode == 200) ||(statusCode == 201))) try {
+            if ((handler != null) && ((statusCode == 200) ||(statusCode == 201))) try {
                 if (Integer.parseInt(map.getFirstValue("Content-Length")) > 0) {
-                    final JsonResponseHandler<T> handler = new JsonResponseHandler<>(client.getObjectMapper(), type);
                     output = handler.getOutputStream();
                     future = client.getExecutorService().submit(handler);
                     settable.addFuture(future);

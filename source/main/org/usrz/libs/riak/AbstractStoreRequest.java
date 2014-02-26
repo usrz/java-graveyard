@@ -29,16 +29,19 @@ implements StoreRequest<T> {
     private final LinksMap linksMap;
     private final T instance;
 
-    protected AbstractStoreRequest(Bucket bucket, T instance, RiakIntrospector introspector) {
-        super(bucket, introspector.getKeyName(instance));
+    protected AbstractStoreRequest(Bucket bucket, T instance, ResponseHandler<T> handler, RiakIntrospector introspector) {
+        super(bucket, introspector.getKeyName(instance), handler);
+        if (instance == null) throw new NullPointerException("Null instance");
         this.metadata = introspector.getMetadata(instance);
         this.indexMap = introspector.getIndexMap(instance);
         this.linksMap = introspector.getLinksMap(instance);
         this.instance = instance;
     }
 
-    protected AbstractStoreRequest(Key key, T instance, RiakIntrospector introspector) {
-        super(key.getBucket(), key.getName());
+    protected AbstractStoreRequest(Key key, T instance, ResponseHandler<T> handler, RiakIntrospector introspector) {
+        super(key, handler);
+        if (instance == null) throw new NullPointerException("Null instance");
+        if (handler == null) throw new NullPointerException("Null response handler");
         this.metadata = introspector.getMetadata(instance);
         this.indexMap = introspector.getIndexMap(instance);
         this.linksMap = introspector.getLinksMap(instance);
@@ -50,13 +53,13 @@ implements StoreRequest<T> {
     @Override
     protected Future<Response<T>> execute(Bucket bucket)
     throws IOException {
-        return ((AbstractRiakClient)bucket.getRiakClient()).executeStore(this, bucket, instance);
+        return ((AbstractRiakClient)bucket.getRiakClient()).executeStore(this, bucket, instance, handler);
     }
 
     @Override
     protected Future<Response<T>> execute(Key key)
     throws IOException {
-        return ((AbstractRiakClient)key.getRiakClient()).executeStore(this, key, instance);
+        return ((AbstractRiakClient)key.getRiakClient()).executeStore(this, key, instance, handler);
     }
 
     /* ====================================================================== */

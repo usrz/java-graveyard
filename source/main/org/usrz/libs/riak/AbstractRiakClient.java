@@ -94,7 +94,7 @@ public abstract class AbstractRiakClient implements RiakClient {
         return this.fetch(getBucket(bucket), key, type);
     }
 
-    protected abstract <T> Future<Response<T>> executeFetch(FetchRequest<T> request, Key key, Class<T> type)
+    protected abstract <T> Future<Response<T>> executeFetch(FetchRequest<T> request, Key key, ResponseHandler<T> handler)
     throws IOException;
 
     /* ====================================================================== */
@@ -107,7 +107,7 @@ public abstract class AbstractRiakClient implements RiakClient {
         return this.store(getBucket(bucket), object);
     }
 
-    protected abstract <T> Future<Response<T>> executeStore(StoreRequest<T> request, Bucket bucket, T instance)
+    protected abstract <T> Future<Response<T>> executeStore(StoreRequest<T> request, Bucket bucket, T instance, ResponseHandler<T> handler)
     throws IOException;
 
     /* ---------------------------------------------------------------------- */
@@ -126,7 +126,7 @@ public abstract class AbstractRiakClient implements RiakClient {
         return this.store(getBucket(bucket), key, object);
     }
 
-    protected abstract <T> Future<Response<T>> executeStore(StoreRequest<T> request, Key key, T instance)
+    protected abstract <T> Future<Response<T>> executeStore(StoreRequest<T> request, Key key, T instance, ResponseHandler<T> handler)
     throws IOException;
 
     /* ====================================================================== */

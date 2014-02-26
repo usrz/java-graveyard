@@ -30,7 +30,7 @@ import java.util.concurrent.TimeoutException;
 import org.usrz.libs.logging.Log;
 import org.usrz.libs.riak.AbstractDeleteRequest;
 import org.usrz.libs.riak.AbstractFetchRequest;
-import org.usrz.libs.riak.AbstractRiakClient;
+import org.usrz.libs.riak.AbstractJsonClient;
 import org.usrz.libs.riak.AbstractStoreRequest;
 import org.usrz.libs.riak.Bucket;
 import org.usrz.libs.riak.DeleteRequest;
@@ -42,6 +42,8 @@ import org.usrz.libs.riak.LinksMap;
 import org.usrz.libs.riak.Metadata;
 import org.usrz.libs.riak.Quorum;
 import org.usrz.libs.riak.Response;
+import org.usrz.libs.riak.ResponseHandler;
+import org.usrz.libs.riak.RiakLocation;
 import org.usrz.libs.riak.StoreRequest;
 import org.usrz.libs.riak.annotations.RiakIntrospector;
 import org.usrz.libs.riak.utils.IterableFuture;
@@ -59,13 +61,12 @@ import com.ning.http.client.AsyncHttpClient.BoundRequestBuilder;
 import com.ning.http.client.Request;
 import com.ning.http.util.DateUtil;
 
-public class AsyncRiakClient extends AbstractRiakClient {
+public class AsyncRiakClient extends AbstractJsonClient {
 
     private final Log log = new Log();
 
     private final ExecutorService executor = Executors.newCachedThreadPool();
     private final RiakIntrospector introspector = new RiakIntrospector(this);
-    private final ObjectMapper mapper = new ObjectMapper();
     private final AsyncHttpClient client;
 
     private final Class<AbstractFetchRequest<?>> fetchRequestClass;
@@ -73,6 +74,7 @@ public class AsyncRiakClient extends AbstractRiakClient {
     private final Class<AbstractDeleteRequest> deleteRequestClass;
 
     public AsyncRiakClient(AsyncHttpClient client) {
+        super(new ObjectMapper());
         if (client == null) throw new NullPointerException("Null client");
         this.client = client;
 
@@ -133,17 +135,18 @@ public class AsyncRiakClient extends AbstractRiakClient {
     /* ====================================================================== */
 
     @Override
-    public <T> FetchRequest<T> fetch(Key key, Class<T> type) {
+    public <T> FetchRequest<T> fetch(Key key, ResponseHandler<T> handler) {
         log.trace("Preparing FETCH request for %s", key.getLocation());
-        return InstanceBuilder.newInstance(fetchRequestClass, key, type);
+        return InstanceBuilder.newInstance(fetchRequestClass, key, handler);
     }
 
     @Override
-    protected <T> Future<Response<T>> executeFetch(FetchRequest<T> request, Key key, Class<T> type)
+    protected <T> Future<Response<T>> executeFetch(FetchRequest<T> request, Key key, ResponseHandler<T> handler)
     throws IOException {
-        final String url = getUrl(key.getBucketName(), key.getName());
-        final Request r = build((Mapper) request, client.prepareGet(url)).build();
-        final AsyncResponseHandler<T> h = new AsyncResponseHandler<T>(this, type, r);
+        final String url = getUrl(key);
+        final Map<String, ?> p = ((Mapper) request).mappedProperties();
+        final Request r = build(p, client.prepareGet(url)).build();
+        final AsyncResponseHandler<T> h = new AsyncResponseHandler<T>(this, handler, r);
         final SettableFuture<Response<T>> f = h.getFuture();
 
         log.debug("Calling %s on %s", r.getMethod(), r.getUrl());
@@ -154,76 +157,82 @@ public class AsyncRiakClient extends AbstractRiakClient {
     /* ====================================================================== */
 
     @Override
-    public <T> StoreRequest<T> store(Bucket bucket, T object) {
+    public <T> StoreRequest<T> store(Bucket bucket, T object, ResponseHandler<T> handler) {
         log.trace("Preparing STORE request for %s (no key)", bucket.getLocation());
-        return InstanceBuilder.newInstance(storeRequestClass, bucket, object, getIntrospector());
+        return InstanceBuilder.newInstance(storeRequestClass, bucket, object, handler, getIntrospector());
     }
 
     @Override
-    public <T> StoreRequest<T> store(Key key, T object) {
+    public <T> StoreRequest<T> store(Key key, T object, ResponseHandler<T> handler) {
         log.trace("Preparing STORE request for %s (no key)", key.getLocation());
-        return InstanceBuilder.newInstance(storeRequestClass, key, object, getIntrospector());
+        return InstanceBuilder.newInstance(storeRequestClass, key, object, handler, getIntrospector());
     }
 
     @Override
-    protected <T> Future<Response<T>> executeStore(StoreRequest<T> request, Bucket bucket, T instance)
+    protected <T> Future<Response<T>> executeStore(StoreRequest<T> request, Bucket bucket, T instance, ResponseHandler<T> handler)
     throws IOException {
-        return this.executeStore(request, bucket, null, instance);
+
+        final BoundRequestBuilder builder = client.preparePost(getUrl(bucket) + "keys/");
+        final AsyncResponseHandler <T> asyncHandler = prepareStore(request, builder, instance, handler);
+        final Request asyncRequest = asyncHandler.getRequest();
+
+        final SettableFuture<Response<T>> future = asyncHandler.getFuture();
+
+        log.debug("Calling %s on %s", asyncRequest.getMethod(), asyncRequest.getUrl());
+        future.addFuture(client.executeRequest(asyncRequest, asyncHandler));
+
+        return future;
     }
 
     @Override
-    protected <T> Future<Response<T>> executeStore(StoreRequest<T> request, Key key, T instance)
+    protected <T> Future<Response<T>> executeStore(StoreRequest<T> request, Key key, T instance, ResponseHandler<T> handler)
     throws IOException {
-        return this.executeStore(request, key.getBucket(), key.getName(), instance);
-    }
 
-    // TODO rewrite, and avoid unnecessary casts!
-    private <T> Future<Response<T>> executeStore(StoreRequest<T> request, Bucket bucket, String key, T instance)
-    throws IOException {
+        final String url = getUrl(key);
+        final BoundRequestBuilder builder = client.preparePut(url);
+        final AsyncResponseHandler <T> asyncHandler = prepareStore(request, builder, instance, handler);
+        final Request asyncRequest = asyncHandler.getRequest();
+        final SettableFuture<Response<T>> future = asyncHandler.getFuture();
+
+        /* Vector clock */
         final Map<String, ?> properties = ((Mapper)request).mappedProperties();
-
-        @SuppressWarnings("unchecked")
-        final Class<T> type = (Class<T>) instance.getClass();
-        final String url = getUrl(bucket.getName(), key);
-        final BoundRequestBuilder b = build(request.getIndexMap(),
-                                      build(request.getLinksMap(),
-                                      build(request.getMetadata(),
-                                      build((Mapper) request, key == null ?
-                                              client.preparePost(url) :
-                                              client.preparePut(url)
-                                          ))));
-
-        /* Return body (default is TRUE) */
-        if (!properties.containsKey("returnBody")) b.addQueryParameter("returnbody", "true");
-
-        /* Vector clock (if any) */
         final String vectorClock = (String) properties.get("vectorClock");
-        if (vectorClock != null) b.setHeader("X-Riak-Vclock", vectorClock);
+        if (vectorClock != null) {
 
-        /* Append our body and create our request */
-        final Request r = b.setBody(new AsyncJsonGenerator(this, instance))
-                           .addHeader("Content-Type", "application/json")
-                           .build();
-        final AsyncResponseHandler<T> h = new AsyncResponseHandler<T>(this, type, r);
-        final SettableFuture<Response<T>> f = h.getFuture();
-
-        /* At this point we check if we need to do a HEAD request first */
-        if ((key != null) && (vectorClock == null)) {
-
-            /* Let's figure out what's our vector clock first */
-            final AsyncVectorClockHandler handler = new AsyncVectorClockHandler(client, h);
-            log.debug("Calling HEAD on %s", url);
-            f.addFuture(client.prepareHead(url).execute(handler));
+            /* We have a vector clock, just do the PUT */
+            asyncRequest.getHeaders().replace("X-Riak-Vclock", vectorClock);
+            log.debug("Calling %s on %s", asyncRequest.getMethod(), asyncRequest.getUrl());
+            future.addFuture(client.executeRequest(asyncRequest, asyncHandler));
 
         } else {
 
-            /* We have either no key, or a vector clock, proceed! */
-            log.debug("Calling %s on %s", r.getMethod(), r.getUrl());
-            f.addFuture(client.executeRequest(r, h));
+            /* Call "HEAD" to get the cector clock */
+            final AsyncVectorClockHandler vh = new AsyncVectorClockHandler(client, asyncHandler);
+            log.debug("Calling HEAD on %s", url);
+            future.addFuture(client.prepareHead(url).execute(vh));
 
         }
 
-        return f;
+        /* Return our future */
+        return future;
+    }
+
+    private <T> AsyncResponseHandler<T> prepareStore(StoreRequest<T> request, BoundRequestBuilder builder, T instance, ResponseHandler<T> handler) {
+        final Map<String, ?> properties = ((Mapper)request).mappedProperties();
+
+        builder = build(request.getIndexMap(),
+                  build(request.getLinksMap(),
+                  build(request.getMetadata(),
+                  build(properties, builder))));
+
+        /* Return body (default is TRUE) */
+        if (!properties.containsKey("returnBody")) builder.addQueryParameter("returnbody", "true");
+
+        /* Append our body and create our request */
+        final Request asyncRequest = builder.setBody(new AsyncJsonGenerator(this, instance))
+                                            .addHeader("Content-Type", "application/json")
+                                            .build();
+        return new AsyncResponseHandler<T>(this, handler, asyncRequest);
     }
 
     /* ====================================================================== */
@@ -237,8 +246,9 @@ public class AsyncRiakClient extends AbstractRiakClient {
     @Override
     protected Future<Response<Void>> executeDelete(DeleteRequest request, Key key)
     throws IOException {
-        final String url = getUrl(key.getBucketName(), key.getName());
-        final Request r = build((Mapper) request, client.prepareDelete(url)).build();
+        final String url = getUrl(key);
+        final Map<String, ?> p = ((Mapper) request).mappedProperties();
+        final Request r = build(p, client.prepareDelete(url)).build();
         final AsyncResponseHandler<Void> h = new AsyncResponseHandler<Void>(this, null, r);
         final SettableFuture<Response<Void>> f = h.getFuture();
 
@@ -250,17 +260,11 @@ public class AsyncRiakClient extends AbstractRiakClient {
     /* ====================================================================== */
 
     // TODO TODO TODO
-    private String getUrl(String bucket, String key) {
-        final StringBuilder builder = new StringBuilder("http://127.0.0.1:4198/buckets/");
-        if (bucket != null) {
-            builder.append(RiakUtils.encode(bucket)).append("/keys/");
-            if (key != null) builder.append(RiakUtils.encode(key));
-        }
-        return builder.toString();
+    private String getUrl(RiakLocation location) {
+        return "http://127.0.0.1:4198" + location.getLocation();
     }
 
-    private BoundRequestBuilder build(Mapper mapper, BoundRequestBuilder builder) {
-        final Map<String, ?> properties = mapper.mappedProperties();
+    private BoundRequestBuilder build(Map<String, ?> properties, BoundRequestBuilder builder) {
 
         /*
          * From "ConditionalRequest":

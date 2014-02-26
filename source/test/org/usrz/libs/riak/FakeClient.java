@@ -20,30 +20,56 @@ import java.util.concurrent.Future;
 
 import org.usrz.libs.riak.utils.IterableFuture;
 
-public class FakeClient extends AbstractRiakClient {
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+public class FakeClient extends AbstractJsonClient {
+
+    public FakeClient() {
+        super(new ObjectMapper());
+    }
 
     @Override
-    public IterableFuture<Bucket> getBuckets() throws IOException {
+    public <T> FetchRequest<T> fetch(Key key, ResponseHandler<T> handler) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public IterableFuture<Key> getKeys(Bucket bucket) throws IOException {
+    public <T> StoreRequest<T> store(Bucket bucket, T object, ResponseHandler<T> handler) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public <T> FetchRequest<T> fetch(Key key, Class<T> type) {
+    public <T> StoreRequest<T> store(Key key, T object, ResponseHandler<T> handler) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public <T> StoreRequest<T> store(Bucket bucket, T object) {
+    public IterableFuture<Bucket> getBuckets()
+    throws IOException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public <T> StoreRequest<T> store(Key key, T object) {
+    public IterableFuture<Key> getKeys(Bucket bucket)
+    throws IOException {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    protected <T> Future<Response<T>> executeFetch(FetchRequest<T> request, Key key, ResponseHandler<T> handler)
+    throws IOException {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    protected <T> Future<Response<T>> executeStore(StoreRequest<T> request, Bucket bucket, T instance, ResponseHandler<T> handler)
+    throws IOException {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    protected <T> Future<Response<T>> executeStore(StoreRequest<T> request, Key key, T instance, ResponseHandler<T> handler)
+    throws IOException {
         throw new UnsupportedOperationException();
     }
 
@@ -53,22 +79,8 @@ public class FakeClient extends AbstractRiakClient {
     }
 
     @Override
-    protected <T> Future<Response<T>> executeFetch(FetchRequest<T> request, Key key, Class<T> type) throws IOException {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    protected <T> Future<Response<T>> executeStore(StoreRequest<T> request, Bucket bucket, T instance) throws IOException {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    protected <T> Future<Response<T>> executeStore(StoreRequest<T> request, Key key, T instance) throws IOException {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    protected Future<Response<Void>> executeDelete(DeleteRequest request, Key key) throws IOException {
+    protected Future<Response<Void>> executeDelete(DeleteRequest request, Key key)
+    throws IOException {
         throw new UnsupportedOperationException();
     }
 

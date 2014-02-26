@@ -13,27 +13,27 @@
  * See the License for the specific language governing permissions and        *
  * limitations under the License.                                             *
  * ========================================================================== */
-package org.usrz.libs.riak;
-
-import static org.usrz.libs.riak.response.NullResponseHandler.NULL_RESPONSE_HANDLER;
+package org.usrz.libs.riak.response;
 
 import java.io.IOException;
-import java.util.concurrent.Future;
+import java.io.InputStream;
 
-public abstract class AbstractDeleteRequest
-extends AbstractRequest<Void, DeleteRequest>
-implements DeleteRequest {
+import org.usrz.libs.riak.ResponseHandler;
 
-    protected AbstractDeleteRequest(Key key) {
-        super(key, NULL_RESPONSE_HANDLER);
+public class NullResponseHandler extends ResponseHandler<Void> {
+
+    public static final NullResponseHandler NULL_RESPONSE_HANDLER = new NullResponseHandler();
+
+    private NullResponseHandler() {
+        /* Nothing to do */
     }
 
-    /* ====================================================================== */
-
     @Override
-    protected Future<Response<Void>> execute(Key key)
+    protected Void call(InputStream input)
     throws IOException {
-        return ((AbstractRiakClient)key.getRiakClient()).executeDelete(this, key);
+        final byte[] buffer = new byte[4096];
+        while (input.read(buffer) >= 0) { }
+        return null;
     }
 
 }
