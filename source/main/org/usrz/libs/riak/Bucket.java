@@ -59,16 +59,30 @@ public class Bucket implements RiakLocation {
         return client.getKeys(name);
     }
 
+    /* ====================================================================== */
+
     public <T> FetchRequest<T> fetch(String key, Class<T> type) {
         return client.fetch(name, key, type);
+    }
+
+    public <T> FetchRequest<T> fetch(String key, ResponseHandler<T> handler) {
+        return client.fetch(name, key, handler);
     }
 
     public <T> StoreRequest<T> store(T object) {
         return client.store(name, object);
     }
 
+    public <T> StoreRequest<T> store(T object, ResponseHandler<T> handler) {
+        return client.store(name, object, handler);
+    }
+
     public <T> StoreRequest<T> store(T object, String key) {
         return client.store(name, key, object);
+    }
+
+    public <T> StoreRequest<T> store(T object, String key, ResponseHandler<T> handler) {
+        return client.store(name, key, object, handler);
     }
 
     public DeleteRequest delete(String key) {
