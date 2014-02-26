@@ -13,28 +13,40 @@
  * See the License for the specific language governing permissions and        *
  * limitations under the License.                                             *
  * ========================================================================== */
-package org.usrz.libs.riak;
+package org.usrz.libs.riak.response;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.regex.Pattern;
 
-public class SiblingsException extends IllegalStateException {
+import org.usrz.libs.riak.ResponseHandler;
 
-    private final Set<Sibling> siblings;
-    private final Key key;
+public class ErrorResponseHandler<T> extends ResponseHandler<T> {
 
-    public SiblingsException(Key key, Set<String> siblings) {
-        super(siblings.size() + " siblings detected in " + key.getLocation());
-        this.siblings = new HashSet<>(siblings.size());
-        for (String sibling: siblings) this.siblings.add(new Sibling(key, sibling));
-        this.key = key;
+    private static final Pattern WHITESPACE = Pattern.compile("\\s+");
+
+    private final int status;
+
+    public ErrorResponseHandler(int status) {
+        this.status = status;
     }
 
-    public Key getKey() {
-        return key;
+    @Override
+    protected T call(InputStream input) throws Exception {
+        final ByteArrayOutputStream array = new ByteArrayOutputStream();
+        final byte[] buffer = new byte[4096];
+        int read = -1;
+        try {
+            while ((read = input.read(buffer)) >= 0) {
+                if (read > 0) array.write(buffer, 0, read);
+            }
+            final String message = new String(array.toByteArray(), "UTF8");
+            final String normalized = WHITESPACE.matcher(message).replaceAll(" ").trim();;
+            throw new IOException(status + ": " + normalized);
+        } finally {
+            input.close();
+        }
     }
 
-    public Set<Sibling> getSiblings() {
-        return siblings;
-    }
 }

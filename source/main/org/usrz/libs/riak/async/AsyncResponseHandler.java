@@ -17,20 +17,11 @@ package org.usrz.libs.riak.async;
 
 import static com.ning.http.util.DateUtil.parseDate;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
 import java.net.URI;
-import java.util.HashSet;
-import java.util.Scanner;
-import java.util.Set;
-import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import java.util.regex.Pattern;
 
 import org.usrz.libs.logging.Log;
 import org.usrz.libs.riak.IndexMapBuilder;
@@ -38,7 +29,9 @@ import org.usrz.libs.riak.Key;
 import org.usrz.libs.riak.LinksMapBuilder;
 import org.usrz.libs.riak.MetadataBuilder;
 import org.usrz.libs.riak.Response;
-import org.usrz.libs.riak.SiblingsException;
+import org.usrz.libs.riak.response.ErrorResponseHandler;
+import org.usrz.libs.riak.response.JsonResponseHandler;
+import org.usrz.libs.riak.response.SiblingsResponseHandler;
 import org.usrz.libs.riak.utils.SettableFuture;
 
 import com.ning.http.client.AsyncHandler;
@@ -126,9 +119,9 @@ public class AsyncResponseHandler<T> implements AsyncHandler<Void> {
             /* Parse only if we have some content (200 and 201, a type and content length) */
             if ((type != null) && ((statusCode == 200) ||(statusCode == 201))) try {
                 if (Integer.parseInt(map.getFirstValue("Content-Length")) > 0) {
-                    final PipedInputStream input = new PipedInputStream();
-                    output = new PipedOutputStream(input);
-                    future = client.getExecutorService().submit(new JsonParser(input));
+                    final JsonResponseHandler<T> handler = new JsonResponseHandler<>(client.getObjectMapper(), type);
+                    output = handler.getOutputStream();
+                    future = client.getExecutorService().submit(handler);
                     settable.addFuture(future);
                 }
             } catch (NullPointerException | NumberFormatException exception) {
@@ -137,19 +130,25 @@ public class AsyncResponseHandler<T> implements AsyncHandler<Void> {
 
         } else if (statusCode == 300) {
 
-            /* See if we have to setup a siblings parser */
-            final PipedInputStream input = new PipedInputStream();
-            output = new PipedOutputStream(input);
-            future = client.getExecutorService().submit(new SiblingsParser(input));
+            /* We have to setup a siblings parser */
+            final String location = map.getFirstValue("Location");
+            final URI locationUri = location == null ? headers.getUrl() : headers.getUrl().resolve(location);
+            final Key key = new Key(client, locationUri.getRawPath());
+            response.setKey(key);
+
+            final SiblingsResponseHandler<T> handler = new SiblingsResponseHandler<>(key);
+            output = handler.getOutputStream();
+            future = client.getExecutorService().submit(handler);
             settable.addFuture(future);
+
             return STATE.CONTINUE;
 
         } else if (statusCode != 404) {
 
-            /* See if we have to setup an error parser */
-            final PipedInputStream input = new PipedInputStream();
-            output = new PipedOutputStream(input);
-            future = client.getExecutorService().submit(new ErrorParser(input));
+            /* We have to setup an error parser */
+            final ErrorResponseHandler<T> handler = new ErrorResponseHandler<>(statusCode);
+            output = handler.getOutputStream();
+            future = client.getExecutorService().submit(handler);
             settable.addFuture(future);
             return STATE.CONTINUE;
         }
@@ -222,83 +221,6 @@ public class AsyncResponseHandler<T> implements AsyncHandler<Void> {
             log.error(exception, "I/O error closing pipe");
         } finally {
             if (future != null) future.cancel(true);
-        }
-    }
-
-    /* ====================================================================== */
-
-    private class JsonParser implements Callable<T> {
-
-        private final InputStream input;
-
-        private JsonParser(InputStream input) {
-            this.input = input;
-        }
-
-        @Override
-        public T call() throws Exception {
-            try {
-                return client.getObjectMapper().readValue(input, type);
-            } finally {
-                input.close();
-            }
-        }
-    }
-
-    /* ====================================================================== */
-
-    private class ErrorParser implements Callable<T> {
-
-        private final InputStream input;
-
-        private ErrorParser(InputStream input) {
-            this.input = input;
-        }
-
-        @Override
-        public T call() throws Exception {
-            final ByteArrayOutputStream array = new ByteArrayOutputStream();
-            final byte[] buffer = new byte[4096];
-            int read = -1;
-            try {
-                while ((read = input.read(buffer)) >= 0) {
-                    if (read > 0) array.write(buffer, 0, read);
-                }
-                throw new IOException(response.getStatus()+ ": " + new String(array.toByteArray(), "UTF8"));
-            } finally {
-                input.close();
-            }
-        }
-    }
-
-    /* ====================================================================== */
-
-    private static final Pattern WHITESPACE = Pattern.compile("\\s");
-
-    private class SiblingsParser implements Callable<T> {
-
-        private final InputStream input;
-
-        private SiblingsParser(InputStream input) {
-            this.input = input;
-        }
-
-        @Override
-        public T call() throws Exception {
-            final Key key = new Key(client, request.getRawUrl());
-            final Scanner scanner = new Scanner(input, "UTF8");
-            final Set<String> siblings = new HashSet<String>();
-            try {
-                scanner.useDelimiter(WHITESPACE);
-                while (scanner.hasNext()) {
-                    final String sibling = scanner.next();
-                    if ("Siblings:".equalsIgnoreCase(sibling)) continue;
-                    siblings.add(sibling);
-                }
-                throw new SiblingsException(key, siblings);
-            } finally {
-                scanner.close();
-            }
         }
     }
 }

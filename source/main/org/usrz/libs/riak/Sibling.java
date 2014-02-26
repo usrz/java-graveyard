@@ -15,26 +15,46 @@
  * ========================================================================== */
 package org.usrz.libs.riak;
 
-import java.util.HashSet;
-import java.util.Set;
 
-public class SiblingsException extends IllegalStateException {
+public class Sibling extends Key {
 
-    private final Set<Sibling> siblings;
-    private final Key key;
+    private final String vtag;
 
-    public SiblingsException(Key key, Set<String> siblings) {
-        super(siblings.size() + " siblings detected in " + key.getLocation());
-        this.siblings = new HashSet<>(siblings.size());
-        for (String sibling: siblings) this.siblings.add(new Sibling(key, sibling));
-        this.key = key;
+    public Sibling(Key key, String vtag) {
+        super(key);
+        if (vtag == null) throw new NullPointerException("Null vtag");
+        this.vtag = vtag;
     }
 
-    public Key getKey() {
-        return key;
+    /* ====================================================================== */
+
+    public final String getVtag() {
+        return vtag;
     }
 
-    public Set<Sibling> getSiblings() {
-        return siblings;
+    /* ====================================================================== */
+
+    @Override
+    public String getLocation() {
+        return super.getLocation() + "?vtag=" + vtag;
     }
+
+    /* ====================================================================== */
+
+    @Override
+    public boolean equals(Object object) {
+        if (super.equals(object)) try {
+            final Sibling sibling = (Sibling) object;
+            return vtag.equals(sibling.vtag);
+        } catch (ClassCastException exception) {
+            /* Ignore and return false */
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return super.hashCode() ^ vtag.hashCode();
+    }
+
 }

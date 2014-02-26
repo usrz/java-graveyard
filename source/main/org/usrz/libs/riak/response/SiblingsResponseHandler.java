@@ -13,28 +13,44 @@
  * See the License for the specific language governing permissions and        *
  * limitations under the License.                                             *
  * ========================================================================== */
-package org.usrz.libs.riak;
+package org.usrz.libs.riak.response;
 
+import java.io.InputStream;
 import java.util.HashSet;
+import java.util.Scanner;
 import java.util.Set;
+import java.util.regex.Pattern;
 
-public class SiblingsException extends IllegalStateException {
+import org.usrz.libs.riak.Key;
+import org.usrz.libs.riak.ResponseHandler;
+import org.usrz.libs.riak.SiblingsException;
 
-    private final Set<Sibling> siblings;
+public class SiblingsResponseHandler<T> extends ResponseHandler<T> {
+
+    private static final Pattern WHITESPACE = Pattern.compile("\\s+");
+
     private final Key key;
 
-    public SiblingsException(Key key, Set<String> siblings) {
-        super(siblings.size() + " siblings detected in " + key.getLocation());
-        this.siblings = new HashSet<>(siblings.size());
-        for (String sibling: siblings) this.siblings.add(new Sibling(key, sibling));
+    public SiblingsResponseHandler(Key key) {
+        if (key == null) throw new NullPointerException("Null key");
         this.key = key;
     }
 
-    public Key getKey() {
-        return key;
+    @Override
+    protected T call(InputStream input) throws Exception {
+        final Scanner scanner = new Scanner(input, "UTF8");
+        final Set<String> siblings = new HashSet<String>();
+        try {
+            scanner.useDelimiter(WHITESPACE);
+            while (scanner.hasNext()) {
+                final String sibling = scanner.next();
+                if ("Siblings:".equalsIgnoreCase(sibling)) continue;
+                siblings.add(sibling);
+            }
+            throw new SiblingsException(key, siblings);
+        } finally {
+            scanner.close();
+        }
     }
 
-    public Set<Sibling> getSiblings() {
-        return siblings;
-    }
 }

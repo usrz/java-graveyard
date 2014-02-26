@@ -15,26 +15,50 @@
  * ========================================================================== */
 package org.usrz.libs.riak;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.PipedInputStream;
+import java.io.PipedOutputStream;
+import java.util.concurrent.Callable;
 
-public class SiblingsException extends IllegalStateException {
+import org.usrz.libs.logging.Log;
 
-    private final Set<Sibling> siblings;
-    private final Key key;
+public abstract class ResponseHandler<T> implements Callable<T> {
 
-    public SiblingsException(Key key, Set<String> siblings) {
-        super(siblings.size() + " siblings detected in " + key.getLocation());
-        this.siblings = new HashSet<>(siblings.size());
-        for (String sibling: siblings) this.siblings.add(new Sibling(key, sibling));
-        this.key = key;
+    private static final Log log = new Log();
+
+    private  PipedInputStream input;
+
+    protected ResponseHandler() {
+        /* Nothing to do */
     }
 
-    public Key getKey() {
-        return key;
+    public OutputStream getOutputStream()
+    throws IllegalStateException, IOException {
+        if (input != null) throw new IllegalStateException();
+        input = new PipedInputStream();
+        return new PipedOutputStream(input);
     }
 
-    public Set<Sibling> getSiblings() {
-        return siblings;
+    @Override
+    public T call()
+    throws Exception {
+        try {
+            return this.call(input);
+        } finally {
+            try {
+                input.close();
+            } catch (IOException exception) {
+                /* This should never happen, but anyhow.... */
+                log.error(exception, "I/O exception closing pipe");
+            } finally {
+                input = null;
+            }
+        }
     }
+
+    protected abstract T call(InputStream input)
+    throws Exception;
+
 }

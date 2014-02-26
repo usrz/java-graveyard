@@ -13,28 +13,34 @@
  * See the License for the specific language governing permissions and        *
  * limitations under the License.                                             *
  * ========================================================================== */
-package org.usrz.libs.riak;
+package org.usrz.libs.riak.response;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.io.InputStream;
 
-public class SiblingsException extends IllegalStateException {
+import org.usrz.libs.riak.ResponseHandler;
 
-    private final Set<Sibling> siblings;
-    private final Key key;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
-    public SiblingsException(Key key, Set<String> siblings) {
-        super(siblings.size() + " siblings detected in " + key.getLocation());
-        this.siblings = new HashSet<>(siblings.size());
-        for (String sibling: siblings) this.siblings.add(new Sibling(key, sibling));
-        this.key = key;
+public class JsonResponseHandler<T> extends ResponseHandler<T> {
+
+    private final ObjectMapper mapper;
+    private final Class<T> type;
+
+    public JsonResponseHandler(ObjectMapper mapper, Class<T> type) {
+        if (mapper == null) throw new NullPointerException("Null object mapper");
+        if (type == null) throw new NullPointerException("Null type");
+        this.mapper = mapper;
+        this.type = type;
     }
 
-    public Key getKey() {
-        return key;
+    @Override
+    protected T call(InputStream input)
+    throws Exception {
+        try {
+            return mapper.readValue(input, type);
+        } finally {
+            input.close();
+        }
     }
 
-    public Set<Sibling> getSiblings() {
-        return siblings;
-    }
 }

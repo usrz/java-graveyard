@@ -20,7 +20,7 @@ import java.util.regex.Pattern;
 
 import org.usrz.libs.riak.utils.RiakUtils;
 
-public final class Key implements RiakLocation {
+public class Key implements RiakLocation {
 
     private static final Pattern PATTERN = Pattern.compile("(.*)/(riak|buckets)/([^/]+)/(keys/)?([^/\\?]+)([/\\?].*)?");
 
@@ -56,6 +56,12 @@ public final class Key implements RiakLocation {
         this(client.getBucket(bucket), key);
     }
 
+    public Key(Key key) {
+        client = key.getRiakClient();
+        bucket = key.getBucket();
+        this.key = key.getName();
+    }
+
     /* ====================================================================== */
 
     @Override
@@ -76,7 +82,7 @@ public final class Key implements RiakLocation {
     }
 
     @Override
-    public final String getLocation() {
+    public String getLocation() {
         return bucket.getLocation() + "keys/" + RiakUtils.encode(key);
     }
 
