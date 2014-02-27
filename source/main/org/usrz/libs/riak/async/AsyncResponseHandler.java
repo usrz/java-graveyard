@@ -15,70 +15,65 @@
  * ========================================================================== */
 package org.usrz.libs.riak.async;
 
-import static com.ning.http.util.DateUtil.parseDate;
-
-import java.io.IOException;
 import java.io.OutputStream;
-import java.net.URI;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 
 import org.usrz.libs.logging.Log;
-import org.usrz.libs.riak.IndexMapBuilder;
-import org.usrz.libs.riak.Key;
-import org.usrz.libs.riak.LinksMapBuilder;
-import org.usrz.libs.riak.MetadataBuilder;
+import org.usrz.libs.riak.ContentHandler;
 import org.usrz.libs.riak.Response;
-import org.usrz.libs.riak.ResponseHandler;
-import org.usrz.libs.riak.response.ErrorResponseHandler;
-import org.usrz.libs.riak.response.SiblingsResponseHandler;
+import org.usrz.libs.riak.response.ErrorContentHandler;
+import org.usrz.libs.riak.response.NullContentHandler;
+import org.usrz.libs.riak.response.SiblingsContentHandler;
 import org.usrz.libs.riak.utils.SettableFuture;
 
 import com.ning.http.client.AsyncHandler;
-import com.ning.http.client.FluentCaseInsensitiveStringsMap;
 import com.ning.http.client.HttpResponseBodyPart;
 import com.ning.http.client.HttpResponseHeaders;
 import com.ning.http.client.HttpResponseStatus;
 import com.ning.http.client.Request;
 
-public class AsyncResponseHandler<T> implements AsyncHandler<Void> {
+public class AsyncResponseHandler<T> implements AsyncHandler<Response<T>> {
 
     private final static Log log = new Log();
 
-    // https://github.com/AsyncHttpClient/async-http-client/issues/489
-    private final SettableFuture<Response<T>> settable = new SettableFuture<Response<T>>();
-
-    private final ResponseHandler<T> handler;
-    private final AsyncResponse<T> response;
+    /* See https://github.com/AsyncHttpClient/async-http-client/issues/489 */
+    private final SettableFuture<Response<T>> future;
+    private final ContentHandler<T> handler;
     private final AsyncRiakClient client;
     private final Request request;
 
+    private AsyncPartial<T> partial = null;
     private OutputStream output = null;
-    private Future<T> future = null;
+    private int status = -1;
 
-    protected AsyncResponseHandler(AsyncRiakClient client, ResponseHandler<T> handler, Request request) {
-        log.trace("Handler for %s on %s created", request.getMethod(), request.getUrl());
+    protected AsyncResponseHandler(AsyncRiakClient client, Request request, ContentHandler<T> handler, SettableFuture<Response<T>> future) {
         if (client == null) throw new NullPointerException("Null client");
-        this.response = new AsyncResponse<T>(client);
+        if (request == null) throw new NullPointerException("Null request");
+        if (handler == null) throw new NullPointerException("Null handler");
+        if (future == null) throw new NullPointerException("Null future");
+
+        log.trace("Handler for %s on %s created", request.getMethod(), request.getUrl());
+
         this.client = client;
-        this.handler = handler;
         this.request = request;
-    }
-
-    // https://github.com/AsyncHttpClient/async-http-client/issues/489
-    protected SettableFuture<Response<T>> getFuture() {
-        return this.settable;
-    }
-
-    protected Request getRequest() {
-        return this.request;
+        this.handler = handler;
+        this.future = future;
     }
 
     @Override
     public STATE onStatusReceived(HttpResponseStatus status)
     throws Exception {
-        final int statusCode = status.getStatusCode();
+        final int statusCode = this.status = status.getStatusCode();
         log.trace("Received status %d for request %s", statusCode, status.getUrl());
+        return STATE.CONTINUE;
+    }
+
+    @Override
+    public STATE onHeadersReceived(HttpResponseHeaders headers)
+    throws Exception {
+        log.trace("Received headers for request %s", headers.getUrl());
+
+        System.err.println("STATUS IS " + this.status);
+        this.partial = new AsyncPartial<T>(client, headers, status);
 
         /*
          * Statuses:
@@ -96,129 +91,73 @@ public class AsyncResponseHandler<T> implements AsyncHandler<Void> {
          *   - 204 No Content: when successful
          *   - 404 Not Found: didn't delete anything
          */
-        response.setStatus(statusCode);
-        response.setSuccessful((statusCode == 200)
-                            || (statusCode == 201)
-                            || (statusCode == 204)
-                            || (statusCode == 304));
-        return STATE.CONTINUE;
-    }
+        final ContentHandler<T> handler = status == 200 ? this.handler : // Success, parse (if any)
+                                          status == 201 ? this.handler : // Created, parse (if any)
+                                          status == 204 ? this.handler : // No content, parse (SuccessContentHandler, for example)
+                                          status == 300 ? new SiblingsContentHandler<T>() : // Siblings, parse
+                                          status == 304 ? new NullContentHandler<T>() : // Not modified, discard
+                                          status == 404 ? new NullContentHandler<T>() : // Not found, discard
+                                              new ErrorContentHandler<T>(); // All other errors, fail
 
-    @Override
-    public STATE onHeadersReceived(HttpResponseHeaders headers)
-    throws Exception {
-        log.trace("Received headers for request %s", headers.getUrl());
-        final FluentCaseInsensitiveStringsMap map = headers.getHeaders();
-
-        /* See if we have to setup a siblings parser */
-        final int statusCode = response.getStatus();
-
-        if (response.isSuccessful()) {
-
-            /* Parse only if we have some content (200 and 201, a type and content length) */
-            if ((handler != null) && ((statusCode == 200) ||(statusCode == 201))) try {
-                if (Integer.parseInt(map.getFirstValue("Content-Length")) > 0) {
-                    output = handler.getOutputStream();
-                    future = client.getExecutorService().submit(handler);
-                    settable.addFuture(future);
+        /* Create our output, and a completion handler for the response */
+        output = handler.getOutputStream(partial);
+        future.addFuture(client.getExecutorService().submit(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        future.set(handler.call());
+                    } catch (Throwable throwable) {
+                        future.fail(null);
+                    }
                 }
-            } catch (NullPointerException | NumberFormatException exception) {
-                /* Nothing to do, null or invalid "Content-Length" header */
-            }
+            }));
 
-        } else if (statusCode == 300) {
-
-            /* We have to setup a siblings parser */
-            final String location = map.getFirstValue("Location");
-            final URI locationUri = location == null ? headers.getUrl() : headers.getUrl().resolve(location);
-            final Key key = new Key(client, locationUri.getRawPath());
-            response.setKey(key);
-
-            final SiblingsResponseHandler<T> handler = new SiblingsResponseHandler<>(key);
-            output = handler.getOutputStream();
-            future = client.getExecutorService().submit(handler);
-            settable.addFuture(future);
-
-            return STATE.CONTINUE;
-
-        } else if (statusCode != 404) {
-
-            /* We have to setup an error parser */
-            final ErrorResponseHandler<T> handler = new ErrorResponseHandler<>(statusCode);
-            output = handler.getOutputStream();
-            future = client.getExecutorService().submit(handler);
-            settable.addFuture(future);
-            return STATE.CONTINUE;
-        }
-
-        /* Get the vector clock... *ALWAYS* */
-        response.setVectorClock(map.getFirstValue("X-Riak-Vclock"));
-
-        /* All the rest (location, last modified, indexes, metadata, .. only if successful */
-        if (!response.isSuccessful()) return STATE.CONTINUE;
-
-        /* Set up our key */
-        final String location = map.getFirstValue("Location");
-        final URI locationUri = location == null ? headers.getUrl() : headers.getUrl().resolve(location);
-        response.setKey(new Key(client, locationUri.getRawPath()));
-
-        /* Set up our last modified date */
-        final String lastModified = map.getFirstValue("Last-Modified");
-        if (lastModified != null) response.setLastModified(parseDate(lastModified));
-
-        /* Parse indexes, links and metadata */
-        response.getLinksMap().addAll(new LinksMapBuilder(client).parseHeaders(map.get("Link")).build());
-        response.getIndexMap().addAll(new IndexMapBuilder().parseHeaders(map).build());
-        response.getMetadata().addAll(new MetadataBuilder().parseHeaders(map).build());
-
-        /* Continue! */
+        /* No matter what, always continue */
         return STATE.CONTINUE;
+
     }
 
     @Override
     public STATE onBodyPartReceived(HttpResponseBodyPart bodyPart)
     throws Exception {
         log.trace("Received body part for request %s", bodyPart.getUrl());
-        if (output != null) bodyPart.writeTo(output);
+        bodyPart.writeTo(output);
         return STATE.CONTINUE;
     }
 
     @Override
-    public Void onCompleted() {
+    public Response<T> onCompleted()
+    throws Exception {
         log.trace("Completed processing of %s", request.getUrl());
 
-        if (output != null) try {
+        try {
             output.close();
         } catch (Throwable throwable) {
-            if (future != null) future.cancel(true);
-            settable.fail(throwable);
-            onThrowable(throwable);
+            future.fail(throwable);
         }
 
-        try {
-            final T result = future == null ? null : future.get(5, TimeUnit.SECONDS);
-            response.setEntity(result);
-            settable.set(response);
-        } catch (Throwable throwable) {
-            if (future != null) future.cancel(true);
-            settable.fail(throwable);
-            onThrowable(throwable);
-        } finally {
-            if ((future != null) && (!future.isDone())) future.cancel(true);
-        }
-
-        return null;
+        return future.get();
     }
 
     @Override
     public void onThrowable(Throwable throwable) {
-        log.error(throwable, "Request: %s %s -> %d", request.getMethod(), request.getRawUrl(), response.getStatus());
+        log.error(throwable, "Request: %s %s -> %d", request.getMethod(), request.getRawUrl(), status);
+
+        /* First, try to kill the Response<?> future */
+        try {
+            future.fail(throwable);
+        } catch (Throwable fail) {
+            /* Could throw CancellationException/IllegalStateException */
+            log.error(fail, "Exception failing response future for request %s", request.getUrl());
+        }
+
+        /* Then close the output */
         try {
             if (output != null) output.close();
-        } catch (IOException exception) {
-            log.error(exception, "I/O error closing pipe");
-        } finally {
-            if (future != null) future.cancel(true);
+        } catch (Throwable fail) {
+            /* Could throw IOException */
+            log.error(fail, "Exception closing handler stream for request %s", request.getUrl());
         }
+
     }
 }

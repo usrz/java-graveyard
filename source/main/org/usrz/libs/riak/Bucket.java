@@ -65,7 +65,7 @@ public class Bucket implements RiakLocation {
         return client.fetch(name, key, type);
     }
 
-    public <T> FetchRequest<T> fetch(String key, ResponseHandler<T> handler) {
+    public <T> FetchRequest<T> fetch(String key, ContentHandler<T> handler) {
         return client.fetch(name, key, handler);
     }
 
@@ -73,7 +73,7 @@ public class Bucket implements RiakLocation {
         return client.store(name, object);
     }
 
-    public <T> StoreRequest<T> store(T object, ResponseHandler<T> handler) {
+    public <T> StoreRequest<T> store(T object, ContentHandler<T> handler) {
         return client.store(name, object, handler);
     }
 
@@ -81,7 +81,7 @@ public class Bucket implements RiakLocation {
         return client.store(name, key, object);
     }
 
-    public <T> StoreRequest<T> store(T object, String key, ResponseHandler<T> handler) {
+    public <T> StoreRequest<T> store(T object, String key, ContentHandler<T> handler) {
         return client.store(name, key, object, handler);
     }
 

@@ -13,50 +13,21 @@
  * See the License for the specific language governing permissions and        *
  * limitations under the License.                                             *
  * ========================================================================== */
-package org.usrz.libs.riak;
+package org.usrz.libs.riak.request;
 
-import java.io.IOException;
+import java.util.Date;
 
-import org.usrz.libs.riak.utils.IterableFuture;
+import org.usrz.libs.riak.Request;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+public interface ConditionalRequest<T, R extends ConditionalRequest<T, R>>
+extends Request<T> {
 
-public class FakeClient extends AbstractJsonClient {
+    public R setIfMatch(String eTag);
 
-    public FakeClient() {
-        super(new ObjectMapper());
-    }
+    public R setIfNoneMatch(String eTag);
 
-    @Override
-    public <T> FetchRequest<T> fetch(Key key, ContentHandler<T> handler) {
-        throw new UnsupportedOperationException();
-    }
+    public R setIfModifiedSince(Date date);
 
-    @Override
-    public <T> StoreRequest<T> store(Bucket bucket, T object, ContentHandler<T> handler) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public <T> StoreRequest<T> store(Key key, T object, ContentHandler<T> handler) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public IterableFuture<Bucket> getBuckets()
-    throws IOException {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public IterableFuture<Key> getKeys(Bucket bucket)
-    throws IOException {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public DeleteRequest delete(Key key) {
-        throw new UnsupportedOperationException();
-    }
+    public R setIfUnmodifiedSince(Date date);
 
 }

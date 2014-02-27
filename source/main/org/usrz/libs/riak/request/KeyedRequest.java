@@ -13,13 +13,16 @@
  * See the License for the specific language governing permissions and        *
  * limitations under the License.                                             *
  * ========================================================================== */
-package org.usrz.libs.riak.requests;
+package org.usrz.libs.riak.request;
 
+import org.usrz.libs.riak.Key;
 import org.usrz.libs.riak.Request;
 
-public interface OptionalBodyRequest<T, R extends OptionalBodyRequest<T, R>>
+public interface KeyedRequest<T, R extends KeyedRequest<T, R>>
 extends Request<T> {
 
-    public R setReturnBody(boolean returnBody);
+    public R setKey(String key);
+
+    public R setKey(Key key);
 
 }

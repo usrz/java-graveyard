@@ -13,121 +13,67 @@
  * See the License for the specific language governing permissions and        *
  * limitations under the License.                                             *
  * ========================================================================== */
-package org.usrz.libs.riak.async;
+package org.usrz.libs.riak;
 
 import java.util.Date;
 
-import org.usrz.libs.riak.IndexMap;
-import org.usrz.libs.riak.LinksMap;
-import org.usrz.libs.riak.Metadata;
-import org.usrz.libs.riak.Key;
-import org.usrz.libs.riak.Response;
+public abstract class AbstractPartialResponse<T> implements PartialResponse<T> {
 
-public class AsyncResponse<T> implements Response<T> {
-
-    private final AsyncRiakClient client;
     private final Metadata metadata;
     private final IndexMap indexMap;
     private final LinksMap linksMap;
+    private final RiakClient client;
+    private final int status;
 
-    private String vectorClock;
-    private Date lastModified;
-    private Key key;
-    private boolean successful;
-    private int status;
-    private T entity;
-
-    protected AsyncResponse(AsyncRiakClient client) {
+    protected AbstractPartialResponse(RiakClient client, int status) {
         if (client == null) throw new NullPointerException("Null client");
         this.linksMap = new LinksMap(client);
         this.indexMap = new IndexMap();
         this.metadata = new Metadata();
         this.client = client;
-
+        this.status = status;
     }
 
     @Override
-    public AsyncRiakClient getRiakClient() {
+    public final RiakClient getRiakClient() {
         return client;
     }
 
     @Override
-    public Metadata getMetadata() {
+    public final Metadata getMetadata() {
         return metadata;
     }
 
     @Override
-    public IndexMap getIndexMap() {
+    public final IndexMap getIndexMap() {
         return indexMap;
     }
 
     @Override
-    public LinksMap getLinksMap() {
+    public final LinksMap getLinksMap() {
         return linksMap;
     }
 
     @Override
-    public String getVectorClock() {
-        return vectorClock;
+    public final boolean isSuccessful() {
+        return ((status == 200)    // 200 OK
+             || (status == 201)    // 201 Created
+             || (status == 204)    // 204 No Content
+             || (status == 304));  // 304 Not Modified
     }
 
     @Override
-    public Date getLastModified() {
-        return lastModified;
-    }
-
-    @Override
-    public Key getKey() {
-        return key;
-    }
-
-    @Override
-    public String getBucket() {
-        return key == null ? null : key.getBucketName();
-    }
-
-    @Override
-    public String getKeyName() {
-        return key == null ? null : key.getName();
-    }
-
-    @Override
-    public boolean isSuccessful() {
-        return successful;
-    }
-
-    @Override
-    public int getStatus() {
+    public final int getStatus() {
         return status;
     }
 
     @Override
-    public T getEntity() {
-        return entity;
-    }
+    public abstract String getVectorClock();
 
-    protected void setVectorClock(String vectorClock) {
-        this.vectorClock = vectorClock;
-    }
+    @Override
+    public abstract Date getLastModified();
 
-    protected void setLastModified(Date lastModified) {
-        this.lastModified = lastModified;
-    }
-
-    protected void setKey(Key key) {
-        this.key = key;
-    }
-
-    protected void setSuccessful(boolean successful) {
-        this.successful = successful;
-    }
-
-    protected void setStatus(int status) {
-        this.status = status;
-    }
-
-    protected void setEntity(T entity) {
-        this.entity = entity;
-    }
+    @Override
+    public abstract Key getKey();
 
 }

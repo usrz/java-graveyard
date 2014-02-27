@@ -23,7 +23,7 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-public class SettableFuture<T> extends AbstractFuture<T> {
+public class SettableFuture<T> extends AbstractFuture<T> implements Settable<T> {
 
     private final Semaphore semaphore = new Semaphore(-1);
     private volatile ExecutionException failure;
@@ -40,6 +40,7 @@ public class SettableFuture<T> extends AbstractFuture<T> {
         }
     }
 
+    @Override
     public void set(T instance) {
         if (outcome.compareAndSet(null, Outcome.COMPLETED)) {
             result = instance;
@@ -50,16 +51,10 @@ public class SettableFuture<T> extends AbstractFuture<T> {
         }
     }
 
-    public void fail(Throwable throwable) {
-        if (outcome.compareAndSet(null, Outcome.COMPLETED)) {
-            failure = throwable instanceof ExecutionException ?
-                          (ExecutionException) throwable :
-                          new ExecutionException(throwable);
-            semaphore.release(MAX_VALUE);
-        } else switch(outcome.get()) {
-            case CANCELLED: throw new CancellationException("Cancelled");
-            case COMPLETED: throw new IllegalStateException("Completed");
-        }
+    @Override
+    protected void failed(Throwable throwable) {
+        failure = new ExecutionException(throwable);
+        semaphore.release(MAX_VALUE);
     }
 
 }

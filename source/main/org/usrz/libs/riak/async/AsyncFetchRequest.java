@@ -13,50 +13,42 @@
  * See the License for the specific language governing permissions and        *
  * limitations under the License.                                             *
  * ========================================================================== */
-package org.usrz.libs.riak;
+package org.usrz.libs.riak.async;
 
 import java.io.IOException;
+import java.util.concurrent.Future;
 
-import org.usrz.libs.riak.utils.IterableFuture;
+import org.usrz.libs.riak.AbstractFetchRequest;
+import org.usrz.libs.riak.ContentHandler;
+import org.usrz.libs.riak.Key;
+import org.usrz.libs.riak.Response;
+import org.usrz.libs.utils.beans.Mapper;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ning.http.client.AsyncHttpClient.BoundRequestBuilder;
+import com.ning.http.client.Request;
 
-public class FakeClient extends AbstractJsonClient {
+public abstract class AsyncFetchRequest<T>
+extends AbstractFetchRequest<T>
+implements Mapper {
 
-    public FakeClient() {
-        super(new ObjectMapper());
+    private final AsyncRiakClient client;
+
+    public AsyncFetchRequest(AsyncRiakClient client, Key key, ContentHandler<T> handler) {
+        super(key, handler);
+        this.client = client;
     }
 
     @Override
-    public <T> FetchRequest<T> fetch(Key key, ContentHandler<T> handler) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public <T> StoreRequest<T> store(Bucket bucket, T object, ContentHandler<T> handler) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public <T> StoreRequest<T> store(Key key, T object, ContentHandler<T> handler) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public IterableFuture<Bucket> getBuckets()
+    protected Future<Response<T>> execute(Key key, ContentHandler<T> handler)
     throws IOException {
-        throw new UnsupportedOperationException();
-    }
 
-    @Override
-    public IterableFuture<Key> getKeys(Bucket bucket)
-    throws IOException {
-        throw new UnsupportedOperationException();
-    }
+        final BoundRequestBuilder builder = getReturnBody() ?
+                                            client.prepareGet(key.getLocation()) :
+                                            client.prepareHead(key.getLocation()) ;
 
-    @Override
-    public DeleteRequest delete(Key key) {
-        throw new UnsupportedOperationException();
+        final Request request = client.instrument(mappedProperties(), builder).build();
+        return client.execute(builder, request, handler);
+
     }
 
 }

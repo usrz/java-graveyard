@@ -13,50 +13,13 @@
  * See the License for the specific language governing permissions and        *
  * limitations under the License.                                             *
  * ========================================================================== */
-package org.usrz.libs.riak;
+package org.usrz.libs.riak.request;
 
-import java.io.IOException;
+import org.usrz.libs.riak.Request;
 
-import org.usrz.libs.riak.utils.IterableFuture;
+public interface OptionalBodyRequest<T, R extends OptionalBodyRequest<T, R>>
+extends Request<T> {
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-public class FakeClient extends AbstractJsonClient {
-
-    public FakeClient() {
-        super(new ObjectMapper());
-    }
-
-    @Override
-    public <T> FetchRequest<T> fetch(Key key, ContentHandler<T> handler) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public <T> StoreRequest<T> store(Bucket bucket, T object, ContentHandler<T> handler) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public <T> StoreRequest<T> store(Key key, T object, ContentHandler<T> handler) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public IterableFuture<Bucket> getBuckets()
-    throws IOException {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public IterableFuture<Key> getKeys(Bucket bucket)
-    throws IOException {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public DeleteRequest delete(Key key) {
-        throw new UnsupportedOperationException();
-    }
+    public R setReturnBody(boolean returnBody);
 
 }

@@ -13,34 +13,15 @@
  * See the License for the specific language governing permissions and        *
  * limitations under the License.                                             *
  * ========================================================================== */
-package org.usrz.libs.riak.response;
+package org.usrz.libs.riak;
 
-import java.io.InputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.util.concurrent.Callable;
 
-import org.usrz.libs.riak.ResponseHandler;
+public interface ContentHandler<T> extends Callable<Response<T>> {
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-public class JsonResponseHandler<T> extends ResponseHandler<T> {
-
-    private final ObjectMapper mapper;
-    private final Class<T> type;
-
-    public JsonResponseHandler(ObjectMapper mapper, Class<T> type) {
-        if (mapper == null) throw new NullPointerException("Null object mapper");
-        if (type == null) throw new NullPointerException("Null type");
-        this.mapper = mapper;
-        this.type = type;
-    }
-
-    @Override
-    protected T call(InputStream input)
-    throws Exception {
-        try {
-            return mapper.readValue(input, type);
-        } finally {
-            input.close();
-        }
-    }
+    public OutputStream getOutputStream(PartialResponse<T> partial)
+    throws IllegalStateException, IOException;
 
 }

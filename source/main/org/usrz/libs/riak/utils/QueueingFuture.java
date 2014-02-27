@@ -18,7 +18,6 @@ package org.usrz.libs.riak.utils;
 import static java.lang.Long.MAX_VALUE;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
-import java.io.Closeable;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.concurrent.CancellationException;
@@ -27,15 +26,15 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-public class QueuedIterableFuture<T> extends AbstractFuture<Iterator<T>>
-implements IterableFuture<T>, Closeable {
+public class QueueingFuture<T> extends AbstractFuture<Iterator<T>>
+implements IterableFuture<T>, Puttable<T> {
 
     private final LinkedBlockingQueue<Reference<T>> queue = new LinkedBlockingQueue<>();
     private volatile Reference<T> last;
 
     /* ====================================================================== */
 
-    public QueuedIterableFuture() {
+    public QueueingFuture() {
         super();
     }
 
@@ -67,19 +66,11 @@ implements IterableFuture<T>, Closeable {
 
     /* ====================================================================== */
 
+    @Override
     public void put(T instance) {
         if (outcome.get() == null) {
             queue.add(new NormalReference(instance));
             return;
-        } else switch(outcome.get()) {
-            case CANCELLED: throw new CancellationException("Cancelled");
-            case COMPLETED: throw new IllegalStateException("Completed");
-        }
-    }
-
-    public void fail(Throwable throwable) {
-        if (outcome.compareAndSet(null, Outcome.COMPLETED)) {
-            queue.add(new ErrorReference(throwable));
         } else switch(outcome.get()) {
             case CANCELLED: throw new CancellationException("Cancelled");
             case COMPLETED: throw new IllegalStateException("Completed");
@@ -94,6 +85,11 @@ implements IterableFuture<T>, Closeable {
             case CANCELLED: throw new CancellationException("Canceled");
             case COMPLETED: throw new IllegalStateException("Completed");
         }
+    }
+
+    @Override
+    protected void failed(Throwable throwable) {
+        queue.add(new ErrorReference(throwable));
     }
 
     /* ====================================================================== */

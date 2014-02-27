@@ -15,12 +15,13 @@
  * ========================================================================== */
 package org.usrz.libs.riak;
 
-import org.usrz.libs.riak.requests.BasicQuorumRequest;
-import org.usrz.libs.riak.requests.BucketedRequest;
-import org.usrz.libs.riak.requests.ConditionalRequest;
-import org.usrz.libs.riak.requests.KeyedRequest;
-import org.usrz.libs.riak.requests.ReadQuorumRequest;
-import org.usrz.libs.riak.requests.SiblingsRequest;
+import org.usrz.libs.riak.request.BasicQuorumRequest;
+import org.usrz.libs.riak.request.BucketedRequest;
+import org.usrz.libs.riak.request.ConditionalRequest;
+import org.usrz.libs.riak.request.KeyedRequest;
+import org.usrz.libs.riak.request.OptionalBodyRequest;
+import org.usrz.libs.riak.request.ReadQuorumRequest;
+import org.usrz.libs.riak.request.SiblingsRequest;
 
 public interface FetchRequest<T>
 extends Request<T>,
@@ -29,6 +30,7 @@ extends Request<T>,
         SiblingsRequest<T, FetchRequest<T>>,
         ReadQuorumRequest<T, FetchRequest<T>>,
         BasicQuorumRequest<T, FetchRequest<T>>,
-        ConditionalRequest<T, FetchRequest<T>> {
+        ConditionalRequest<T, FetchRequest<T>>,
+        OptionalBodyRequest<T, FetchRequest<T>> {
 
 }

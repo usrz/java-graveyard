@@ -23,25 +23,53 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-public abstract class AbstractIterableFuture<T> implements IterableFuture<T> {
+public abstract class ConvertingFuture<T, F> implements IterableFuture<T> {
+
+    protected final IterableFuture<F> future;
+
+    protected ConvertingFuture(IterableFuture<F> future) {
+        if (future == null) throw new NullPointerException("Null future");
+        this.future = future;
+    }
 
     @Override
-    public Iterator<T> iterator() {
+    public boolean hasNext(long timeout, TimeUnit unit)
+    throws InterruptedException, TimeoutException {
+        return future.hasNext(timeout, unit);
+    }
+
+    @Override
+    public boolean cancel(boolean mayInterruptIfRunning) {
+        return future.cancel(mayInterruptIfRunning);
+    }
+
+    @Override
+    public boolean isCancelled() {
+        return future.isCancelled();
+    }
+
+    @Override
+    public boolean isDone() {
+        return future.isDone();
+    }
+
+    @Override
+    public final Iterator<T> iterator() {
         return this;
     }
 
     @Override
-    public Iterator<T> get() {
+    public final Iterator<T> get() {
         return this;
     }
 
     @Override
-    public Iterator<T> get(long timeout, TimeUnit unit) {
+    public final Iterator<T> get(long timeout, TimeUnit unit) {
         return this;
     }
 
     @Override
-    public boolean hasNext()
+    public final boolean hasNext()
     throws UncheckedInterruptedException {
         try {
             return this.hasNext(MAX_VALUE, MILLISECONDS);
@@ -54,7 +82,7 @@ public abstract class AbstractIterableFuture<T> implements IterableFuture<T> {
     }
 
     @Override
-    public T next()
+    public final T next()
     throws UncheckedExecutionException,
            UncheckedInterruptedException {
         try {
@@ -70,7 +98,7 @@ public abstract class AbstractIterableFuture<T> implements IterableFuture<T> {
     }
 
     @Override
-    public void remove() {
+    public final void remove() {
         throw new UnsupportedOperationException();
     }
 

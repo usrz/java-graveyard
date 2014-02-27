@@ -21,7 +21,7 @@ import java.util.concurrent.Future;
 import org.usrz.libs.riak.annotations.RiakIntrospector;
 
 public abstract class AbstractStoreRequest<T>
-extends AbstractRequest<T, StoreRequest<T>>
+extends AbstractContentRequest<T, StoreRequest<T>>
 implements StoreRequest<T> {
 
     private final Metadata metadata;
@@ -29,7 +29,9 @@ implements StoreRequest<T> {
     private final LinksMap linksMap;
     private final T instance;
 
-    protected AbstractStoreRequest(Bucket bucket, T instance, ResponseHandler<T> handler, RiakIntrospector introspector) {
+    private String vectorClock;
+
+    protected AbstractStoreRequest(Bucket bucket, T instance, ContentHandler<T> handler, RiakIntrospector introspector) {
         super(bucket, introspector.getKeyName(instance), handler);
         if (instance == null) throw new NullPointerException("Null instance");
         this.metadata = introspector.getMetadata(instance);
@@ -38,7 +40,7 @@ implements StoreRequest<T> {
         this.instance = instance;
     }
 
-    protected AbstractStoreRequest(Key key, T instance, ResponseHandler<T> handler, RiakIntrospector introspector) {
+    protected AbstractStoreRequest(Key key, T instance, ContentHandler<T> handler, RiakIntrospector introspector) {
         super(key, handler);
         if (instance == null) throw new NullPointerException("Null instance");
         if (handler == null) throw new NullPointerException("Null response handler");
@@ -51,15 +53,29 @@ implements StoreRequest<T> {
     /* ====================================================================== */
 
     @Override
-    protected Future<Response<T>> execute(Bucket bucket)
+    protected final Future<Response<T>> execute(Bucket bucket, ContentHandler<T> handler)
     throws IOException {
-        return ((AbstractRiakClient)bucket.getRiakClient()).executeStore(this, bucket, instance, handler);
+        return execute(bucket, instance, handler);
     }
 
+    protected abstract Future<Response<T>> execute(Bucket bucket, T instance, ContentHandler<T> handler)
+    throws IOException;
+
     @Override
-    protected Future<Response<T>> execute(Key key)
+    protected final Future<Response<T>> execute(Key key, ContentHandler<T> handler)
     throws IOException {
-        return ((AbstractRiakClient)key.getRiakClient()).executeStore(this, key, instance, handler);
+        return execute(key, instance, handler, vectorClock);
+    }
+
+    protected abstract Future<Response<T>> execute(Key key, T instance, ContentHandler<T> handler, String vectorClock)
+    throws IOException;
+
+    /* ====================================================================== */
+
+    @Override
+    public StoreRequest<T> setVectorClock(String vectorClock) {
+        this.vectorClock = vectorClock;
+        return thisInstance;
     }
 
     /* ====================================================================== */

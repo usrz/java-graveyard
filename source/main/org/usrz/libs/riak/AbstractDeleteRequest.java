@@ -15,25 +15,27 @@
  * ========================================================================== */
 package org.usrz.libs.riak;
 
-import static org.usrz.libs.riak.response.NullResponseHandler.NULL_RESPONSE_HANDLER;
-
 import java.io.IOException;
 import java.util.concurrent.Future;
 
 public abstract class AbstractDeleteRequest
-extends AbstractRequest<Void, DeleteRequest>
+extends AbstractRequest<Boolean, DeleteRequest>
 implements DeleteRequest {
 
     protected AbstractDeleteRequest(Key key) {
-        super(key, NULL_RESPONSE_HANDLER);
+        super(key);
     }
 
     /* ====================================================================== */
 
     @Override
-    protected Future<Response<Void>> execute(Key key)
+    protected Future<Response<Boolean>> execute(Bucket bucket)
     throws IOException {
-        return ((AbstractRiakClient)key.getRiakClient()).executeDelete(this, key);
+        throw new UnsupportedOperationException();
     }
+
+    @Override
+    protected abstract Future<Response<Boolean>> execute(Key key)
+    throws IOException;
 
 }

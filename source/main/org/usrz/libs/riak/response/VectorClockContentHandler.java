@@ -13,50 +13,22 @@
  * See the License for the specific language governing permissions and        *
  * limitations under the License.                                             *
  * ========================================================================== */
-package org.usrz.libs.riak;
+package org.usrz.libs.riak.response;
 
 import java.io.IOException;
 
-import org.usrz.libs.riak.utils.IterableFuture;
+import org.usrz.libs.riak.PartialResponse;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+public class VectorClockContentHandler extends NullContentHandler<String> {
 
-public class FakeClient extends AbstractJsonClient {
-
-    public FakeClient() {
-        super(new ObjectMapper());
+    public VectorClockContentHandler() {
+        /* Nothing to do */
     }
 
     @Override
-    public <T> FetchRequest<T> fetch(Key key, ContentHandler<T> handler) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public <T> StoreRequest<T> store(Bucket bucket, T object, ContentHandler<T> handler) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public <T> StoreRequest<T> store(Key key, T object, ContentHandler<T> handler) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public IterableFuture<Bucket> getBuckets()
+    protected String call(PartialResponse<String> partial)
     throws IOException {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public IterableFuture<Key> getKeys(Bucket bucket)
-    throws IOException {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public DeleteRequest delete(Key key) {
-        throw new UnsupportedOperationException();
+        return partial.getVectorClock();
     }
 
 }

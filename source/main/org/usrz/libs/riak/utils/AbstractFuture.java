@@ -20,12 +20,13 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 
-public abstract class AbstractFuture<T> implements Future<T> {
+public abstract class AbstractFuture<T> implements Future<T>, Fallible {
 
     protected enum Outcome { CANCELLED, COMPLETED };
     protected final AtomicReference<Outcome> outcome = new AtomicReference<>(null);
@@ -45,8 +46,15 @@ public abstract class AbstractFuture<T> implements Future<T> {
 
     @Override
     public final boolean cancel(boolean mayInterruptIfRunning) {
-        if (outcome.compareAndSet(null, Outcome.CANCELLED))
-            for (Future<?> future: futures) future.cancel(mayInterruptIfRunning);
+        if (outcome.compareAndSet(null, Outcome.CANCELLED)) {
+            try {
+                /* Fail this with a cancellation exception */
+                this.failed(new CancellationException("Cancelled"));
+            } finally {
+                /* Cancel others *ONLY* if we're being cancelled (avoid loops) */
+                for (Future<?> future: futures) future.cancel(mayInterruptIfRunning);
+            }
+        }
         return isCancelled();
     }
 
@@ -70,5 +78,24 @@ public abstract class AbstractFuture<T> implements Future<T> {
             throw new UncheckedTimeoutException(exception);
         }
     }
+
+    @Override
+    public final void fail(Throwable throwable) {
+        if (outcome.compareAndSet(null, Outcome.COMPLETED)) {
+            try {
+                /* Fail this unwrapping any ExecutionException */
+                this.failed(throwable instanceof ExecutionException ? throwable.getCause() : throwable);
+            } finally {
+                /* Cancel others *ONLY* if we're being cancelled (avoid loops) */
+                for (Future<?> future: futures) future.cancel(true);
+            }
+
+        } else switch(outcome.get()) {
+            case CANCELLED: throw new CancellationException("Cancelled");
+            case COMPLETED: throw new IllegalStateException("Completed");
+        }
+    }
+
+    protected abstract void failed(Throwable throwable);
 
 }

@@ -13,16 +13,34 @@
  * See the License for the specific language governing permissions and        *
  * limitations under the License.                                             *
  * ========================================================================== */
-package org.usrz.libs.riak.requests;
+package org.usrz.libs.riak.response;
 
-import org.usrz.libs.riak.Bucket;
-import org.usrz.libs.riak.Request;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.regex.Pattern;
 
-public interface BucketedRequest<T, R extends BucketedRequest<T, R>>
-extends Request<T> {
+import org.usrz.libs.riak.PartialResponse;
 
-    public R setBucket(String bucket);
+public class ErrorContentHandler<T> extends PipedContentHandler<T> {
 
-    public R setBucket(Bucket bucket);
+    private static final Pattern WHITESPACE = Pattern.compile("\\s+");
 
+    public ErrorContentHandler() {
+        /* Nothing to do */
+    }
+
+    @Override
+    protected T read(PartialResponse<T> partial, InputStream input)
+    throws Exception {
+        final ByteArrayOutputStream array = new ByteArrayOutputStream();
+        final byte[] buffer = new byte[4096];
+        int read = -1;
+        while ((read = input.read(buffer)) >= 0) {
+            if (read > 0) array.write(buffer, 0, read);
+        }
+        final String message = new String(array.toByteArray(), "UTF8");
+        final String normalized = WHITESPACE.matcher(message).replaceAll(" ").trim();;
+        throw new IOException(partial.getStatus() + ": " + normalized);
+    }
 }

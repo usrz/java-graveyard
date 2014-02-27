@@ -13,52 +13,44 @@
  * See the License for the specific language governing permissions and        *
  * limitations under the License.                                             *
  * ========================================================================== */
-package org.usrz.libs.riak;
+package org.usrz.libs.riak.response;
 
-import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
-import java.util.concurrent.Callable;
 
-import org.usrz.libs.logging.Log;
+import org.usrz.libs.riak.PartialResponse;
 
-public abstract class ResponseHandler<T> implements Callable<T> {
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.MappingIterator;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
-    private static final Log log = new Log();
+public class JsonContentHandler<T> extends PipedContentHandler<T> {
 
-    private  PipedInputStream input;
+    private final ObjectMapper mapper;
+    private final Class<T> type;
 
-    protected ResponseHandler() {
-        /* Nothing to do */
-    }
-
-    public OutputStream getOutputStream()
-    throws IllegalStateException, IOException {
-        if (input != null) throw new IllegalStateException();
-        input = new PipedInputStream();
-        return new PipedOutputStream(input);
+    public JsonContentHandler(ObjectMapper mapper, Class<T> type) {
+        if (mapper == null) throw new NullPointerException("Null object mapper");
+        if (type == null) throw new NullPointerException("Null type");
+        this.mapper = mapper;
+        this.type = type;
     }
 
     @Override
-    public T call()
+    protected T read(PartialResponse<T> partial, InputStream input)
     throws Exception {
-        try {
-            return this.call(input);
+
+        /* Use a MappingIterator, as we don't want to fail on empty JSON */
+        final JsonParser parser = mapper.getFactory().createParser(input);
+        final MappingIterator<T> iterator = mapper.readValues(parser, type);
+
+        /* Read only the first value, then close */
+        while (iterator.hasNextValue()) try {
+            return iterator.next();
         } finally {
-            try {
-                input.close();
-            } catch (IOException exception) {
-                /* This should never happen, but anyhow.... */
-                log.error(exception, "I/O exception closing pipe");
-            } finally {
-                input = null;
-            }
+            iterator.close();
         }
+
+        /* Didn't even get the first value */
+        return null;
     }
-
-    protected abstract T call(InputStream input)
-    throws Exception;
-
 }

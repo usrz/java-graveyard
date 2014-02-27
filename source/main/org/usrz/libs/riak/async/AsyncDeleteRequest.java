@@ -13,16 +13,39 @@
  * See the License for the specific language governing permissions and        *
  * limitations under the License.                                             *
  * ========================================================================== */
-package org.usrz.libs.riak.requests;
+package org.usrz.libs.riak.async;
 
+import java.io.IOException;
+import java.util.concurrent.Future;
+
+import org.usrz.libs.riak.AbstractDeleteRequest;
 import org.usrz.libs.riak.Key;
-import org.usrz.libs.riak.Request;
+import org.usrz.libs.riak.Response;
+import org.usrz.libs.riak.response.SuccessContentHandler;
+import org.usrz.libs.utils.beans.Mapper;
 
-public interface KeyedRequest<T, R extends KeyedRequest<T, R>>
-extends Request<T> {
+import com.ning.http.client.AsyncHttpClient.BoundRequestBuilder;
+import com.ning.http.client.Request;
 
-    public R setKey(String key);
+public abstract class AsyncDeleteRequest
+extends AbstractDeleteRequest
+implements Mapper {
 
-    public R setKey(Key key);
+    private final AsyncRiakClient client;
+
+    public AsyncDeleteRequest(AsyncRiakClient client, Key key) {
+        super(key);
+        this.client = client;
+    }
+
+    @Override
+    protected Future<Response<Boolean>> execute(Key key)
+    throws IOException {
+
+        final BoundRequestBuilder builder = client.prepareDelete(key.getLocation());
+        final Request request = client.instrument(mappedProperties(), builder).build();
+        return client.execute(builder, request, new SuccessContentHandler()); // TODO: should use null handler?
+
+    }
 
 }

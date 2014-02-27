@@ -18,46 +18,39 @@ package org.usrz.libs.riak;
 import java.io.IOException;
 import java.util.concurrent.Future;
 
-import org.usrz.libs.riak.requests.BucketedRequest;
-import org.usrz.libs.riak.requests.KeyedRequest;
+import org.usrz.libs.riak.request.BucketedRequest;
+import org.usrz.libs.riak.request.KeyedRequest;
 
 public abstract class AbstractRequest<T, R extends Request<T>
                                                  & KeyedRequest<T, R>
                                                  & BucketedRequest<T,R>>
 implements Request<T>, KeyedRequest<T, R>, BucketedRequest<T, R> {
 
-    private final R thisInstance;
-    protected final ResponseHandler<T> handler;
-    protected Bucket bucket;
-    protected Key key;
+    protected final R thisInstance;
+    private Bucket bucket;
+    private Key key;
 
     @SuppressWarnings("unchecked")
-    protected AbstractRequest(Key key, ResponseHandler<T> handler) {
-        if (handler == null) throw new NullPointerException("Null response handler");
+    protected AbstractRequest(Key key) {
         if (key == null) throw new NullPointerException("Null key");
         this.bucket = key.getBucket();
         this.key = key;
-        this.handler = handler;
         thisInstance = (R) this;
     }
 
     @SuppressWarnings("unchecked")
-    protected AbstractRequest(Bucket bucket, ResponseHandler<T> handler) {
-        if (handler == null) throw new NullPointerException("Null response handler");
+    protected AbstractRequest(Bucket bucket) {
         if (bucket == null) throw new NullPointerException("Null bucket");
         this.bucket = bucket;
         this.key = null;
-        this.handler = handler;
         thisInstance = (R) this;
     }
 
     @SuppressWarnings("unchecked")
-    protected AbstractRequest(Bucket bucket, String key, ResponseHandler<T> handler) {
-        if (handler == null) throw new NullPointerException("Null response handler");
+    protected AbstractRequest(Bucket bucket, String key) {
         if (bucket == null) throw new NullPointerException("Null bucket");
         this.key = key == null ? null : new Key(bucket, key);
         this.bucket = bucket;
-        this.handler = handler;
         thisInstance = (R) this;
     }
 
@@ -69,15 +62,11 @@ implements Request<T>, KeyedRequest<T, R>, BucketedRequest<T, R> {
         return key == null ? execute(bucket) : execute(key);
     }
 
-    protected Future<Response<T>> execute(Bucket bucket)
-    throws IOException {
-        throw new UnsupportedOperationException();
-    }
+    protected abstract Future<Response<T>> execute(Bucket bucket)
+    throws IOException;
 
-    protected Future<Response<T>> execute(Key key)
-    throws IOException {
-        throw new UnsupportedOperationException();
-    }
+    protected abstract Future<Response<T>> execute(Key key)
+    throws IOException;
 
     /* ====================================================================== */
 

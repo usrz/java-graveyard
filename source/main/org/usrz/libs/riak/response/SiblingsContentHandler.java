@@ -13,50 +13,45 @@
  * See the License for the specific language governing permissions and        *
  * limitations under the License.                                             *
  * ========================================================================== */
-package org.usrz.libs.riak;
+package org.usrz.libs.riak.response;
 
-import java.io.IOException;
+import java.io.InputStream;
+import java.util.HashSet;
+import java.util.Scanner;
+import java.util.Set;
+import java.util.regex.Pattern;
 
-import org.usrz.libs.riak.utils.IterableFuture;
+import org.usrz.libs.riak.Key;
+import org.usrz.libs.riak.PartialResponse;
+import org.usrz.libs.riak.SiblingsException;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+public class SiblingsContentHandler<T> extends PipedContentHandler<T> {
 
-public class FakeClient extends AbstractJsonClient {
+    private static final Pattern WHITESPACE = Pattern.compile("\\s+");
 
-    public FakeClient() {
-        super(new ObjectMapper());
+    public SiblingsContentHandler() {
+        /* Nothing to do */
     }
 
     @Override
-    public <T> FetchRequest<T> fetch(Key key, ContentHandler<T> handler) {
-        throw new UnsupportedOperationException();
-    }
+    protected T read(PartialResponse<T> partial, InputStream input)
+    throws Exception {
+        final Key key = partial.getKey();
+        if (key == null) throw new NullPointerException("Null key parsing siblings");
 
-    @Override
-    public <T> StoreRequest<T> store(Bucket bucket, T object, ContentHandler<T> handler) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public <T> StoreRequest<T> store(Key key, T object, ContentHandler<T> handler) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public IterableFuture<Bucket> getBuckets()
-    throws IOException {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public IterableFuture<Key> getKeys(Bucket bucket)
-    throws IOException {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public DeleteRequest delete(Key key) {
-        throw new UnsupportedOperationException();
+        final Scanner scanner = new Scanner(input, "UTF8");
+        final Set<String> siblings = new HashSet<String>();
+        try {
+            scanner.useDelimiter(WHITESPACE);
+            while (scanner.hasNext()) {
+                final String sibling = scanner.next();
+                if ("Siblings:".equalsIgnoreCase(sibling)) continue;
+                siblings.add(sibling);
+            }
+            throw new SiblingsException(key, siblings);
+        } finally {
+            scanner.close();
+        }
     }
 
 }

@@ -17,12 +17,11 @@ package org.usrz.libs.riak;
 
 import java.io.IOException;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import org.usrz.libs.riak.utils.ConvertingFuture;
 import org.usrz.libs.riak.utils.IterableFuture;
-import org.usrz.libs.riak.utils.WrappingIterableFuture;
 
 public abstract class AbstractRiakClient implements RiakClient {
 
@@ -40,7 +39,7 @@ public abstract class AbstractRiakClient implements RiakClient {
     @Override
     public final IterableFuture<String> getBucketNames()
     throws IOException {
-        return new WrappingIterableFuture<String, Bucket>(getBuckets()) {
+        return new ConvertingFuture<String, Bucket>(getBuckets()) {
             @Override
             public String next(long timeout, TimeUnit unit)
             throws InterruptedException, ExecutionException, TimeoutException {
@@ -64,7 +63,7 @@ public abstract class AbstractRiakClient implements RiakClient {
     @Override
     public final IterableFuture<String> getKeyNames(Bucket bucket)
     throws IOException {
-        return new WrappingIterableFuture<String, Key>(this.getKeys(bucket)) {
+        return new ConvertingFuture<String, Key>(this.getKeys(bucket)) {
             @Override
             public String next(long timeout, TimeUnit unit)
             throws InterruptedException, ExecutionException, TimeoutException {
@@ -82,7 +81,9 @@ public abstract class AbstractRiakClient implements RiakClient {
     /* ====================================================================== */
 
     @Override
-    public abstract <T> FetchRequest<T> fetch(Key key, Class<T> type);
+    public final <T> FetchRequest<T> fetch(String bucket, String key, Class<T> type) {
+        return this.fetch(getBucket(bucket), key, type);
+    }
 
     @Override
     public final <T> FetchRequest<T> fetch(Bucket bucket, String key, Class<T> type) {
@@ -90,49 +91,48 @@ public abstract class AbstractRiakClient implements RiakClient {
     }
 
     @Override
-    public final <T> FetchRequest<T> fetch(String bucket, String key, Class<T> type) {
-        return this.fetch(getBucket(bucket), key, type);
+    public <T> FetchRequest<T> fetch(String bucket, String key, ContentHandler<T> handler) {
+        return this.fetch(getBucket(bucket), key, handler);
     }
 
-    protected abstract <T> Future<Response<T>> executeFetch(FetchRequest<T> request, Key key, ResponseHandler<T> handler)
-    throws IOException;
+    @Override
+    public <T> FetchRequest<T> fetch(Bucket bucket, String key, ContentHandler<T> handler) {
+        return this.fetch(new Key(bucket, key), handler);
+    }
 
     /* ====================================================================== */
 
     @Override
-    public abstract <T> StoreRequest<T> store(Bucket bucket, T object);
-
-    @Override
-    public final <T> StoreRequest<T> store(String bucket, T object) {
+    public <T> StoreRequest<T> store(String bucket, T object)  {
         return this.store(getBucket(bucket), object);
     }
 
-    protected abstract <T> Future<Response<T>> executeStore(StoreRequest<T> request, Bucket bucket, T instance, ResponseHandler<T> handler)
-    throws IOException;
-
-    /* ---------------------------------------------------------------------- */
+    @Override
+    public <T> StoreRequest<T> store(String bucket, String key, T object) {
+        return this.store(getBucket(bucket), key, object);
+    }
 
     @Override
-    public abstract <T> StoreRequest<T> store(Key key, T object);
-
-
-    @Override
-    public final <T> StoreRequest<T> store(Bucket bucket, String key, T object) {
+    public <T> StoreRequest<T> store(Bucket bucket, String key, T object) {
         return this.store(new Key(bucket, key), object);
     }
 
     @Override
-    public final <T> StoreRequest<T> store(String bucket, String key, T object) {
-        return this.store(getBucket(bucket), key, object);
+    public <T> StoreRequest<T> store(String bucket, T object, ContentHandler<T> handler) {
+        return this.store(getBucket(bucket), object, handler);
     }
 
-    protected abstract <T> Future<Response<T>> executeStore(StoreRequest<T> request, Key key, T instance, ResponseHandler<T> handler)
-    throws IOException;
-
-    /* ====================================================================== */
+    @Override
+    public <T> StoreRequest<T> store(String bucket, String key, T object, ContentHandler<T> handler) {
+        return this.store(getBucket(bucket), key, object, handler);
+    }
 
     @Override
-    public abstract DeleteRequest delete(Key key);
+    public <T> StoreRequest<T> store(Bucket bucket, String key, T object, ContentHandler<T> handler)  {
+        return this.store(new Key(bucket, key), object, handler);
+    }
+
+    /* ====================================================================== */
 
     @Override
     public final DeleteRequest delete(Bucket bucket, String key) {
@@ -143,8 +143,5 @@ public abstract class AbstractRiakClient implements RiakClient {
     public final DeleteRequest delete(String bucket, String key) {
         return this.delete(getBucket(bucket), key);
     }
-
-    protected abstract Future<Response<Void>> executeDelete(DeleteRequest request, Key key)
-    throws IOException;
 
 }

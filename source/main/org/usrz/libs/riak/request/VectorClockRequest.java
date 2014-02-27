@@ -13,40 +13,13 @@
  * See the License for the specific language governing permissions and        *
  * limitations under the License.                                             *
  * ========================================================================== */
-package org.usrz.libs.riak.response;
+package org.usrz.libs.riak.request;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.regex.Pattern;
+import org.usrz.libs.riak.Request;
 
-import org.usrz.libs.riak.ResponseHandler;
+public interface VectorClockRequest<T, R extends VectorClockRequest<T, R>>
+extends Request<T> {
 
-public class ErrorResponseHandler<T> extends ResponseHandler<T> {
-
-    private static final Pattern WHITESPACE = Pattern.compile("\\s+");
-
-    private final int status;
-
-    public ErrorResponseHandler(int status) {
-        this.status = status;
-    }
-
-    @Override
-    protected T call(InputStream input) throws Exception {
-        final ByteArrayOutputStream array = new ByteArrayOutputStream();
-        final byte[] buffer = new byte[4096];
-        int read = -1;
-        try {
-            while ((read = input.read(buffer)) >= 0) {
-                if (read > 0) array.write(buffer, 0, read);
-            }
-            final String message = new String(array.toByteArray(), "UTF8");
-            final String normalized = WHITESPACE.matcher(message).replaceAll(" ").trim();;
-            throw new IOException(status + ": " + normalized);
-        } finally {
-            input.close();
-        }
-    }
+    public R setVectorClock(String vectorClock);
 
 }

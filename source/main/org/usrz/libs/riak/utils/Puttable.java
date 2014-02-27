@@ -13,27 +13,17 @@
  * See the License for the specific language governing permissions and        *
  * limitations under the License.                                             *
  * ========================================================================== */
-package org.usrz.libs.riak.response;
+package org.usrz.libs.riak.utils;
 
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.Closeable;
 
-import org.usrz.libs.riak.ResponseHandler;
+public interface Puttable<T> extends Closeable, Fallible {
 
-public class NullResponseHandler extends ResponseHandler<Void> {
-
-    public static final NullResponseHandler NULL_RESPONSE_HANDLER = new NullResponseHandler();
-
-    private NullResponseHandler() {
-        /* Nothing to do */
-    }
+    public void put(T instance)
+    throws IllegalStateException;
 
     @Override
-    protected Void call(InputStream input)
-    throws IOException {
-        final byte[] buffer = new byte[4096];
-        while (input.read(buffer) >= 0) { }
-        return null;
-    }
+    public void close()
+    throws IllegalStateException;
 
 }

@@ -13,39 +13,12 @@
  * See the License for the specific language governing permissions and        *
  * limitations under the License.                                             *
  * ========================================================================== */
-package org.usrz.libs.riak.utils;
+package org.usrz.libs.riak;
 
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+import java.util.concurrent.Future;
 
-public abstract class WrappingIterableFuture<T, F> extends AbstractIterableFuture<T> {
+public interface ResponseFuture<T> extends Future<Response<T>> {
 
-    protected final IterableFuture<F> future;
-
-    protected WrappingIterableFuture(IterableFuture<F> future) {
-        if (future == null) throw new NullPointerException("Null future");
-        this.future = future;
-    }
-
-    @Override
-    public boolean hasNext(long timeout, TimeUnit unit)
-    throws InterruptedException, TimeoutException {
-        return future.hasNext(timeout, unit);
-    }
-
-    @Override
-    public boolean cancel(boolean mayInterruptIfRunning) {
-        return future.cancel(mayInterruptIfRunning);
-    }
-
-    @Override
-    public boolean isCancelled() {
-        return future.isCancelled();
-    }
-
-    @Override
-    public boolean isDone() {
-        return future.isDone();
-    }
+    public void addListener(ResponseListener<T> listener);
 
 }

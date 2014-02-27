@@ -15,42 +15,50 @@
  * ========================================================================== */
 package org.usrz.libs.riak.response;
 
-import java.io.InputStream;
-import java.util.HashSet;
-import java.util.Scanner;
-import java.util.Set;
-import java.util.regex.Pattern;
+import java.io.IOException;
+import java.io.OutputStream;
 
-import org.usrz.libs.riak.Key;
-import org.usrz.libs.riak.ResponseHandler;
-import org.usrz.libs.riak.SiblingsException;
+import org.usrz.libs.riak.ContentHandler;
+import org.usrz.libs.riak.PartialResponse;
+import org.usrz.libs.riak.Response;
 
-public class SiblingsResponseHandler<T> extends ResponseHandler<T> {
+public class NullContentHandler<T> implements ContentHandler<T> {
 
-    private static final Pattern WHITESPACE = Pattern.compile("\\s+");
+    private static final OutputStream NULL_OUTPUT_STREAM = new OutputStream() {
+        @Override public void write(int b) {}
+        @Override public void write(byte[] b) {}
+        @Override public void write(byte[] b, int off, int len) {}
+        @Override public void flush() {}
+        @Override public void close() {}
+    };
 
-    private final Key key;
+    private PartialResponse<T> partial;
 
-    public SiblingsResponseHandler(Key key) {
-        if (key == null) throw new NullPointerException("Null key");
-        this.key = key;
+    public NullContentHandler() {
+        /* Nothing to do */
     }
 
     @Override
-    protected T call(InputStream input) throws Exception {
-        final Scanner scanner = new Scanner(input, "UTF8");
-        final Set<String> siblings = new HashSet<String>();
+    public OutputStream getOutputStream(PartialResponse<T> partial)
+    throws IllegalStateException, IOException {
+        if (this.partial != null) throw new IllegalStateException();
+        this.partial = partial;
+        return NULL_OUTPUT_STREAM;
+    }
+
+    @Override
+    public final Response<T> call()
+    throws Exception {
         try {
-            scanner.useDelimiter(WHITESPACE);
-            while (scanner.hasNext()) {
-                final String sibling = scanner.next();
-                if ("Siblings:".equalsIgnoreCase(sibling)) continue;
-                siblings.add(sibling);
-            }
-            throw new SiblingsException(key, siblings);
+            return new Response<T>(partial, call(partial));
         } finally {
-            scanner.close();
+            partial = null;
         }
+    }
+
+    protected T call(PartialResponse<T> partial)
+    throws Exception {
+        return null;
     }
 
 }

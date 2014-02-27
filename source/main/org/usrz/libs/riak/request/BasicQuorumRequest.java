@@ -13,20 +13,13 @@
  * See the License for the specific language governing permissions and        *
  * limitations under the License.                                             *
  * ========================================================================== */
-package org.usrz.libs.riak.requests;
+package org.usrz.libs.riak.request;
 
-import org.usrz.libs.riak.Quorum;
 import org.usrz.libs.riak.Request;
 
-public interface ReadQuorumRequest<T, R extends ReadQuorumRequest<T, R>>
+public interface BasicQuorumRequest<T, R extends BasicQuorumRequest<T, R>>
 extends Request<T> {
 
-    public R setReadQuorum(int quorum);
-
-    public R setReadQuorum(Quorum quorum);
-
-    public R setPrimaryReadQuorum(int quorum);
-
-    public R setPrimaryReadQuorum(Quorum quorum);
+    public R setBasicQuorum(boolean basicQuorum);
 
 }

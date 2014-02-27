@@ -49,11 +49,11 @@ public interface RiakClient {
 
     public <T> FetchRequest<T> fetch(Key key, Class<T> type);
 
-    public <T> FetchRequest<T> fetch(String bucket, String key, ResponseHandler<T> handler);
+    public <T> FetchRequest<T> fetch(String bucket, String key, ContentHandler<T>  handler);
 
-    public <T> FetchRequest<T> fetch(Bucket bucket, String key, ResponseHandler<T> handler);
+    public <T> FetchRequest<T> fetch(Bucket bucket, String key, ContentHandler<T>  handler);
 
-    public <T> FetchRequest<T> fetch(Key key, ResponseHandler<T> handler);
+    public <T> FetchRequest<T> fetch(Key key, ContentHandler<T>  handler);
 
     /* ====================================================================== */
 
@@ -67,15 +67,15 @@ public interface RiakClient {
 
     public <T> StoreRequest<T> store(Key key, T object);
 
-    public <T> StoreRequest<T> store(String bucket, T object, ResponseHandler<T> handler);
+    public <T> StoreRequest<T> store(String bucket, T object, ContentHandler<T>  handler);
 
-    public <T> StoreRequest<T> store(Bucket bucket, T object, ResponseHandler<T> handler);
+    public <T> StoreRequest<T> store(Bucket bucket, T object, ContentHandler<T>  handler);
 
-    public <T> StoreRequest<T> store(String bucket, String key, T object, ResponseHandler<T> handler);
+    public <T> StoreRequest<T> store(String bucket, String key, T object, ContentHandler<T>  handler);
 
-    public <T> StoreRequest<T> store(Bucket bucket, String key, T object, ResponseHandler<T> handler);
+    public <T> StoreRequest<T> store(Bucket bucket, String key, T object, ContentHandler<T>  handler);
 
-    public <T> StoreRequest<T> store(Key key, T object, ResponseHandler<T> handler);
+    public <T> StoreRequest<T> store(Key key, T object, ContentHandler<T>  handler);
 
     /* ====================================================================== */
 

@@ -13,24 +13,14 @@
  * See the License for the specific language governing permissions and        *
  * limitations under the License.                                             *
  * ========================================================================== */
-package org.usrz.libs.riak.requests;
+package org.usrz.libs.riak;
 
-import org.usrz.libs.riak.Quorum;
-import org.usrz.libs.riak.Request;
+import java.util.EventListener;
 
-public interface WriteQuorumRequest<T, R extends WriteQuorumRequest<T, R>>
-extends Request<T> {
+public interface ResponseListener<T> extends EventListener {
 
-    public R setWriteQuorum(int quorum);
+    public void responseHandled(ResponseEvent<T> response);
 
-    public R setWriteQuorum(Quorum quorum);
-
-    public R setDurableWriteQuorum(int quorum);
-
-    public R setDurableWriteQuorum(Quorum quorum);
-
-    public R setPrimaryWriteQuorum(int quorum);
-
-    public R setPrimaryWriteQuorum(Quorum quorum);
+    public void responseFailed(ResponseEvent<T> response);
 
 }

@@ -13,21 +13,20 @@
  * See the License for the specific language governing permissions and        *
  * limitations under the License.                                             *
  * ========================================================================== */
-package org.usrz.libs.riak.requests;
+package org.usrz.libs.riak.request;
 
-import java.util.Date;
-
+import org.usrz.libs.riak.Quorum;
 import org.usrz.libs.riak.Request;
 
-public interface ConditionalRequest<T, R extends ConditionalRequest<T, R>>
+public interface ReadQuorumRequest<T, R extends ReadQuorumRequest<T, R>>
 extends Request<T> {
 
-    public R setIfMatch(String eTag);
+    public R setReadQuorum(int quorum);
 
-    public R setIfNoneMatch(String eTag);
+    public R setReadQuorum(Quorum quorum);
 
-    public R setIfModifiedSince(Date date);
+    public R setPrimaryReadQuorum(int quorum);
 
-    public R setIfUnmodifiedSince(Date date);
+    public R setPrimaryReadQuorum(Quorum quorum);
 
 }

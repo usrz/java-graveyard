@@ -15,12 +15,12 @@
  * ========================================================================== */
 package org.usrz.libs.riak;
 
-import org.usrz.libs.riak.requests.BucketedRequest;
-import org.usrz.libs.riak.requests.ConditionalRequest;
-import org.usrz.libs.riak.requests.KeyedRequest;
-import org.usrz.libs.riak.requests.OptionalBodyRequest;
-import org.usrz.libs.riak.requests.VectorClockRequest;
-import org.usrz.libs.riak.requests.WriteQuorumRequest;
+import org.usrz.libs.riak.request.BucketedRequest;
+import org.usrz.libs.riak.request.ConditionalRequest;
+import org.usrz.libs.riak.request.KeyedRequest;
+import org.usrz.libs.riak.request.OptionalBodyRequest;
+import org.usrz.libs.riak.request.VectorClockRequest;
+import org.usrz.libs.riak.request.WriteQuorumRequest;
 
 public interface StoreRequest<T>
 extends Request<T>,

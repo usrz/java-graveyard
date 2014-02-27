@@ -17,28 +17,40 @@ package org.usrz.libs.riak;
 
 import java.util.Date;
 
-public interface Response<T> extends RiakClientAware {
+public class Response<T> extends AbstractPartialResponse<T> {
 
-    public String getVectorClock();
+    private final PartialResponse<T> partial;
+    private final T content;
 
-    public Metadata getMetadata();
+    public Response(PartialResponse<T> partial, T content) {
+        super(partial.getRiakClient(), partial.getStatus());
+        System.err.println("Partial " + partial.getClass() + " " + partial.getStatus());
+        this.partial = partial;
+        this.content = content;
+    }
 
-    public IndexMap getIndexMap();
+    public T getContent() {
+        return content;
+    }
 
-    public LinksMap getLinksMap();
+    @Override
+    public String getLocation() {
+        return partial.getLocation();
+    }
 
-    public Date getLastModified();
+    @Override
+    public String getVectorClock() {
+        return partial.getVectorClock();
+    }
 
-    public Key getKey();
+    @Override
+    public Date getLastModified() {
+        return partial.getLastModified();
+    }
 
-    public String getBucket();
-
-    public String  getKeyName();
-
-    public boolean isSuccessful();
-
-    public int getStatus();
-
-    public T getEntity();
+    @Override
+    public Key getKey() {
+        return partial.getKey();
+    }
 
 }

@@ -19,19 +19,21 @@ import java.io.IOException;
 import java.util.concurrent.Future;
 
 public abstract class AbstractFetchRequest<T>
-extends AbstractRequest<T, FetchRequest<T>>
+extends AbstractContentRequest<T, FetchRequest<T>>
 implements FetchRequest<T> {
 
-    protected AbstractFetchRequest(Key key, ResponseHandler<T> handler) {
+    protected AbstractFetchRequest(Key key, ContentHandler<T> handler) {
         super(key, handler);
     }
 
-    /* ====================================================================== */
+    @Override
+    protected Future<Response<T>> execute(Bucket bucket, ContentHandler<T> handler)
+    throws IOException {
+        throw new UnsupportedOperationException();
+    }
 
     @Override
-    protected Future<Response<T>> execute(Key key)
-    throws IOException {
-        return ((AbstractRiakClient)key.getRiakClient()).executeFetch(this, key, handler);
-    }
+    protected abstract Future<Response<T>> execute(Key key, ContentHandler<T> handler)
+    throws IOException;
 
 }

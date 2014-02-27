@@ -13,13 +13,11 @@
  * See the License for the specific language governing permissions and        *
  * limitations under the License.                                             *
  * ========================================================================== */
-package org.usrz.libs.riak.requests;
+package org.usrz.libs.riak.utils;
 
-import org.usrz.libs.riak.Request;
+public interface Settable<T> extends Fallible {
 
-public interface SiblingsRequest<T, R extends SiblingsRequest<T, R>>
-extends Request<T> {
-
-    public R setSibling(String sibling);
+    public void set(T object)
+    throws IllegalStateException;
 
 }

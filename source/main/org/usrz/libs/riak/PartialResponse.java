@@ -15,48 +15,24 @@
  * ========================================================================== */
 package org.usrz.libs.riak;
 
-import java.io.IOException;
+import java.util.Date;
 
-import org.usrz.libs.riak.utils.IterableFuture;
+public interface PartialResponse<T> extends RiakClientAware, RiakLocation {
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+    public Metadata getMetadata();
 
-public class FakeClient extends AbstractJsonClient {
+    public IndexMap getIndexMap();
 
-    public FakeClient() {
-        super(new ObjectMapper());
-    }
+    public LinksMap getLinksMap();
 
-    @Override
-    public <T> FetchRequest<T> fetch(Key key, ContentHandler<T> handler) {
-        throw new UnsupportedOperationException();
-    }
+    public boolean isSuccessful();
 
-    @Override
-    public <T> StoreRequest<T> store(Bucket bucket, T object, ContentHandler<T> handler) {
-        throw new UnsupportedOperationException();
-    }
+    public int getStatus();
 
-    @Override
-    public <T> StoreRequest<T> store(Key key, T object, ContentHandler<T> handler) {
-        throw new UnsupportedOperationException();
-    }
+    public String getVectorClock();
 
-    @Override
-    public IterableFuture<Bucket> getBuckets()
-    throws IOException {
-        throw new UnsupportedOperationException();
-    }
+    public Date getLastModified();
 
-    @Override
-    public IterableFuture<Key> getKeys(Bucket bucket)
-    throws IOException {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public DeleteRequest delete(Key key) {
-        throw new UnsupportedOperationException();
-    }
+    public Key getKey();
 
 }

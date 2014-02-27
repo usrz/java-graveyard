@@ -69,62 +69,63 @@ public class AsyncRiakClientTest extends AbstractTest {
         final Future<Response<TestObject>> storeFuture1 = bucket.store(object).execute();
         final Response<TestObject> storeResponse1 = storeFuture1.get();
 
-        log.info("Store 1: status=%d success=%b entity=%s", storeResponse1.getStatus(), storeResponse1.isSuccessful(), storeResponse1.getEntity());
+        log.info("Store 1: status=%d success=%b entity=%s", storeResponse1.getStatus(), storeResponse1.isSuccessful(), storeResponse1.getContent());
         assertEquals(storeResponse1.getStatus(), 201);
         assertEquals(storeResponse1.isSuccessful(), true);
-        assertEquals(storeResponse1.getEntity(), object);
-        assertNotSame(storeResponse1.getEntity(), object);
+        assertEquals(storeResponse1.getContent(), object);
+        assertNotSame(storeResponse1.getContent(), object);
 
         /* Modify what we've created */
         object.setValue("foobar2");
-        final Future<Response<TestObject>> storeFuture2 = bucket.store(object, storeResponse1.getKeyName()).execute();
+        final Future<Response<TestObject>> storeFuture2 = bucket.store(object, storeResponse1.getKey().getName()).execute();
         final Response<TestObject> storeResponse2 = storeFuture2.get();
 
-        log.info("Store 2: status=%d success=%b entity=%s", storeResponse2.getStatus(), storeResponse2.isSuccessful(), storeResponse2.getEntity());
+        log.info("Store 2: status=%d success=%b entity=%s", storeResponse2.getStatus(), storeResponse2.isSuccessful(), storeResponse2.getContent());
         assertEquals(storeResponse2.getStatus(), 200);
         assertEquals(storeResponse2.isSuccessful(), true);
-        assertEquals(storeResponse2.getEntity(), object);
-        assertNotSame(storeResponse2.getEntity(), object);
+        assertEquals(storeResponse2.getContent(), object);
+        assertNotSame(storeResponse2.getContent(), object);
         assertEquals(storeResponse2.getKey(), storeResponse1.getKey());
 
         /* Fetch what we've created */
-        final Future<Response<TestObject>> fetchFuture1 = bucket.fetch(storeResponse2.getKeyName(), TestObject.class).execute();
+        final Future<Response<TestObject>> fetchFuture1 = bucket.fetch(storeResponse2.getKey().getName(), TestObject.class).execute();
         final Response<TestObject> fetchResponse1 = fetchFuture1.get();
 
-        log.info("Fetch 1: status=%d success=%b entity=%s", fetchResponse1.getStatus(), fetchResponse1.isSuccessful(), fetchResponse1.getEntity());
+        log.info("Fetch 1: status=%d success=%b entity=%s", fetchResponse1.getStatus(), fetchResponse1.isSuccessful(), fetchResponse1.getContent());
         assertEquals(fetchResponse1.getStatus(), 200);
         assertEquals(fetchResponse1.isSuccessful(), true);
-        assertEquals(fetchResponse1.getEntity(), object);
-        assertNotSame(fetchResponse1.getEntity(), object);
+        assertEquals(fetchResponse1.getContent(), object);
+        assertNotSame(fetchResponse1.getContent(), object);
         assertEquals(fetchResponse1.getKey(), storeResponse2.getKey());
 
         /* Fetch something that does NOT exist (no exceptions!) */
-        final Future<Response<TestObject>> fetchFuture2 = bucket.fetch(fetchResponse1.getKeyName() + "_foobar", TestObject.class).execute();
+        final Future<Response<TestObject>> fetchFuture2 = bucket.fetch(fetchResponse1.getKey().getName() + "_foobar", TestObject.class).execute();
         final Response<TestObject> fetchResponse2 = fetchFuture2.get();
 
-        log.info("Fetch 2: status=%d success=%b entity=%s", fetchResponse2.getStatus(), fetchResponse2.isSuccessful(), fetchResponse2.getEntity());
+        log.info("Fetch 2: status=%d success=%b entity=%s", fetchResponse2.getStatus(), fetchResponse2.isSuccessful(), fetchResponse2.getContent());
         assertEquals(fetchResponse2.getStatus(), 404);
         assertEquals(fetchResponse2.isSuccessful(), false);
-        assertNull(fetchResponse2.getEntity());
-        assertNull(fetchResponse2.getKey());
+        assertNull(fetchResponse2.getContent());
+        assertEquals(fetchResponse2.getKey().getName(), fetchResponse1.getKey().getName() + "_foobar");
 
         /* Delete what we've created */
-        final Future<Response<Void>> deleteFuture1 = bucket.delete(fetchResponse1.getKeyName()).execute();
-        final Response<Void> deleteResponse1 = deleteFuture1.get();
-        log.info("Delete 1: status=%d success=%b entity=%s", deleteResponse1.getStatus(), deleteResponse1.isSuccessful(), deleteResponse1.getEntity());
+        final Future<Response<Boolean>> deleteFuture1 = bucket.delete(fetchResponse1.getKey().getName()).execute();
+        final Response<Boolean> deleteResponse1 = deleteFuture1.get();
+        log.info("Delete 1: status=%d success=%b entity=%s", deleteResponse1.getStatus(), deleteResponse1.isSuccessful(), deleteResponse1.getContent());
         assertEquals(deleteResponse1.getStatus(), 204);
         assertEquals(deleteResponse1.isSuccessful(), true);
-        assertNull(deleteResponse1.getEntity());
+        assertNotNull(deleteResponse1.getContent());
+        assertTrue(deleteResponse1.getContent());
         assertEquals(deleteResponse1.getKey(), fetchResponse1.getKey());
 
         /* Attempt to delete again, we should not fail */
-        final Future<Response<Void>> deleteFuture2 = bucket.delete(deleteResponse1.getKeyName()).execute();
-        final Response<Void> deleteResponse2 = deleteFuture2.get();
-        log.info("Delete 2: status=%d success=%b entity=%s", deleteResponse2.getStatus(), deleteResponse2.isSuccessful(), deleteResponse2.getEntity());
+        final Future<Response<Boolean>> deleteFuture2 = bucket.delete(deleteResponse1.getKey().getName()).execute();
+        final Response<Boolean> deleteResponse2 = deleteFuture2.get();
+        log.info("Delete 2: status=%d success=%b entity=%s", deleteResponse2.getStatus(), deleteResponse2.isSuccessful(), deleteResponse2.getContent());
         assertEquals(deleteResponse2.getStatus(), 404);
         assertEquals(deleteResponse2.isSuccessful(), false);
-        assertNull(deleteResponse2.getEntity());
-        assertNull(deleteResponse2.getKey());
+        assertNull(deleteResponse2.getContent());
+        assertEquals(deleteResponse2.getKey(), deleteResponse1.getKey());
     }
 
     /* ====================================================================== */

@@ -13,13 +13,23 @@
  * See the License for the specific language governing permissions and        *
  * limitations under the License.                                             *
  * ========================================================================== */
-package org.usrz.libs.riak.requests;
+package org.usrz.libs.riak.response;
 
-import org.usrz.libs.riak.Request;
+import java.io.IOException;
 
-public interface BasicQuorumRequest<T, R extends BasicQuorumRequest<T, R>>
-extends Request<T> {
+import org.usrz.libs.riak.PartialResponse;
 
-    public R setBasicQuorum(boolean basicQuorum);
+public class SuccessContentHandler extends NullContentHandler<Boolean> {
+
+    public SuccessContentHandler() {
+        /* Nothing to do */
+    }
+
+    @Override
+    protected Boolean call(PartialResponse<Boolean> partial)
+    throws IOException {
+        System.err.println("CALLED WITH " + partial.isSuccessful());
+        return partial.isSuccessful();
+    }
 
 }
