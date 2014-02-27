@@ -96,7 +96,7 @@ implements Mapper {
             final AsyncResponseFuture<T> future = new AsyncResponseFuture<>(client);
 
             /* Instrument our future with a couple of handlers and return it */
-            return future.addFuture(client.fetch(key, new VectorClockContentHandler()).execute()
+            return future.notify(client.fetch(key, new VectorClockContentHandler()).execute()
                 .addListener(new ResponseListener<String>() {
 
                     @Override

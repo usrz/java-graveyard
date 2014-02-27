@@ -101,7 +101,7 @@ public class AsyncResponseHandler<T> implements AsyncHandler<Response<T>> {
 
         /* Create our output, and a completion handler for the response */
         output = handler.getOutputStream(partial);
-        future.addFuture(client.getExecutorService().submit(new Runnable() {
+        future.notify(client.getExecutorService().submit(new Runnable() {
                 @Override
                 public void run() {
                     try {

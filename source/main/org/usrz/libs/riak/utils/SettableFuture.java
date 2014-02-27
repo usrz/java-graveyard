@@ -116,7 +116,7 @@ public class SettableFuture<T> implements Future<T> {
 
     /* ====================================================================== */
 
-    public SettableFuture<T> addFuture(Future<?> future) {
+    public SettableFuture<T> notify(Future<?> future) {
         synchronized (this.futures) {
             final Result result = this.result.get();
             if (result != null) {

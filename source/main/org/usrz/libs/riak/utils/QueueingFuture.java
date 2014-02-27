@@ -75,8 +75,8 @@ implements IterableFuture<T>, Puttable<T> {
     /* ====================================================================== */
 
     @Override
-    public QueueingFuture<T> addFuture(Future<?> future) {
-        super.addFuture(future);
+    public QueueingFuture<T> notify(Future<?> future) {
+        super.notify(future);
         return this;
     }
 

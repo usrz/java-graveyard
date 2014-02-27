@@ -73,8 +73,8 @@ implements ResponseFuture<T> {
     }
 
     @Override
-    public AsyncResponseFuture<T> addFuture(Future<?> future) {
-        super.addFuture(future);
+    public AsyncResponseFuture<T> notify(Future<?> future) {
+        super.notify(future);
         return this;
     }
 

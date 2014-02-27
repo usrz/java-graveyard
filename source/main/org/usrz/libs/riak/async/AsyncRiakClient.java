@@ -103,7 +103,7 @@ public class AsyncRiakClient extends AbstractJsonClient implements RiakClient {
         final Request request = prepareGet("/buckets?buckets=stream").build();
         final BucketListContentHandler handler = new BucketListContentHandler(mapper, iterable);
 
-        return iterable.addFuture(iterate(request, iterable, handler));
+        return iterable.notify(iterate(request, iterable, handler));
     }
 
     @Override
@@ -114,7 +114,7 @@ public class AsyncRiakClient extends AbstractJsonClient implements RiakClient {
         final Request request = prepareGet(bucket.getLocation() + "keys/?keys=stream").build();
         final KeyListContentHandler handler = new KeyListContentHandler(mapper, bucket, iterable);
 
-        return iterable.addFuture(iterate(request, iterable, handler));
+        return iterable.notify(iterate(request, iterable, handler));
     }
 
     /* ====================================================================== */
@@ -176,7 +176,7 @@ public class AsyncRiakClient extends AbstractJsonClient implements RiakClient {
 
         /* See https://github.com/AsyncHttpClient/async-http-client/issues/489 */
         final AsyncResponseFuture<T> future = new AsyncResponseFuture<>(this);
-        future.addFuture(client.executeRequest(request, new AsyncResponseHandler<>(this, request, handler, future)));
+        future.notify(client.executeRequest(request, new AsyncResponseHandler<>(this, request, handler, future)));
         return future;
 
     }
