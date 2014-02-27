@@ -47,7 +47,7 @@ implements Mapper {
                                             client.prepareHead(key.getLocation()) ;
 
         final Request request = client.instrument(mappedProperties(), builder).build();
-        return client.execute(builder, request, handler);
+        return client.execute(request, handler);
 
     }
 

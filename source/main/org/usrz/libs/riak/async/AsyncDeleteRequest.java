@@ -44,7 +44,7 @@ implements Mapper {
 
         final BoundRequestBuilder builder = client.prepareDelete(key.getLocation());
         final Request request = client.instrument(mappedProperties(), builder).build();
-        return client.execute(builder, request, new SuccessContentHandler()); // TODO: should use null handler?
+        return client.execute(request, new SuccessContentHandler()); // TODO: should use null handler?
 
     }
 

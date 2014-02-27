@@ -72,7 +72,7 @@ implements Mapper {
         final String location = bucket.getLocation() + "keys/";
         final BoundRequestBuilder builder = client.preparePost(location);
         final Request request = prepare(builder, instance).build();
-        return client.execute(builder, request, handler);
+        return client.execute(request, handler);
 
     }
 
@@ -88,7 +88,7 @@ implements Mapper {
 
             /* We have a vector clock, just do the PUT */
             request.getHeaders().replace("X-Riak-Vclock", vectorClock);
-            return client.execute(builder, request, handler);
+            return client.execute(request, handler);
 
         } else {
 
@@ -106,7 +106,7 @@ implements Mapper {
 
                             /* We might now have a vector clock, just do the PUT */
                             request.getHeaders().replace("X-Riak-Vclock", vclock);
-                            future.set(client.execute(builder, request, handler).get());
+                            future.set(client.execute(request, handler).get());
                         } catch (Throwable throwable) {
                             future.fail(throwable);
                         }

@@ -91,7 +91,8 @@ public class AsyncRiakClient extends AbstractJsonClient implements RiakClient {
     /* ====================================================================== */
 
     @Override
-    public IterableFuture<Bucket> getBuckets() throws IOException {
+    public IterableFuture<Bucket> getBuckets()
+    throws IOException {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException();
     }
@@ -155,7 +156,7 @@ public class AsyncRiakClient extends AbstractJsonClient implements RiakClient {
         return client.prepareDelete(getUrl(location));
     }
 
-    protected <T> SettableFuture<Response<T>> execute(BoundRequestBuilder builder, Request request, ContentHandler<T> handler)
+    protected <T> SettableFuture<Response<T>> execute(Request request, ContentHandler<T> handler)
     throws IOException {
         log.debug("Calling %s on %s", request.getMethod(), request.getUrl());
 
