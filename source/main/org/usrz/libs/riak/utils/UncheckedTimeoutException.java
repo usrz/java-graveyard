@@ -15,69 +15,17 @@
  * ========================================================================== */
 package org.usrz.libs.riak.utils;
 
-import java.io.PrintStream;
-import java.io.PrintWriter;
 import java.util.concurrent.TimeoutException;
 
-public class UncheckedTimeoutException extends RuntimeException {
-
-    private final TimeoutException exception;
+public class UncheckedTimeoutException extends IllegalStateException {
 
     public UncheckedTimeoutException(TimeoutException exception) {
-        this.exception = exception;
-    }
-
-    public TimeoutException getCheckedException() {
-        return exception;
+        super(exception.getMessage(), exception);
     }
 
     @Override
-    public String getMessage() {
-        return exception.getMessage();
+    public TimeoutException getCause() {
+        return (TimeoutException) super.getCause();
     }
 
-    @Override
-    public String getLocalizedMessage() {
-        return exception.getLocalizedMessage();
-    }
-
-    @Override
-    public Throwable getCause() {
-        return exception.getCause();
-    }
-
-    @Override
-    public Throwable initCause(Throwable cause) {
-        return exception.initCause(cause);
-    }
-
-    @Override
-    public void printStackTrace() {
-        exception.printStackTrace();
-    }
-
-    @Override
-    public void printStackTrace(PrintStream s) {
-        exception.printStackTrace(s);
-    }
-
-    @Override
-    public void printStackTrace(PrintWriter s) {
-        exception.printStackTrace(s);
-    }
-
-    @Override
-    public Throwable fillInStackTrace() {
-        return exception.fillInStackTrace();
-    }
-
-    @Override
-    public StackTraceElement[] getStackTrace() {
-        return exception.getStackTrace();
-    }
-
-    @Override
-    public void setStackTrace(StackTraceElement[] stackTrace) {
-        exception.setStackTrace(stackTrace);
-    }
 }
