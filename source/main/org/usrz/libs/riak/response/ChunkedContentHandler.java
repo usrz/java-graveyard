@@ -15,8 +15,6 @@
  * ========================================================================== */
 package org.usrz.libs.riak.response;
 
-import static java.lang.Boolean.FALSE;
-
 import java.io.InputStream;
 import java.util.concurrent.ExecutionException;
 
@@ -24,20 +22,26 @@ import org.usrz.libs.riak.PartialResponse;
 import org.usrz.libs.riak.utils.Puttable;
 
 import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.MappingIterator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-public class ChunkedContentHandler extends PipedContentHandler<Boolean> {
+public abstract class ChunkedContentHandler<T, H extends ChunkedContentHandler<T, H>>
+extends PipedContentHandler<Boolean> {
 
-    private final Puttable<String> puttable;
+    private final Class<? extends Chunk<T, H>> chunkType;
+    private final Puttable<T> puttable;
     private final ObjectMapper mapper;
+    private final H thisInstance;
 
-    public ChunkedContentHandler(ObjectMapper mapper, Puttable<String> puttable) {
+    @SuppressWarnings("unchecked")
+    public ChunkedContentHandler(ObjectMapper mapper, Puttable<T> puttable, Class<? extends Chunk<T, H>> chunkType) {
         if (mapper == null) throw new NullPointerException("Null object mapper");
         if (puttable == null) throw new NullPointerException("Null queue");
+        if (chunkType == null) throw new NullPointerException("Null chunk type");
         this.mapper = mapper;
         this.puttable = puttable;
+        this.chunkType = chunkType;
+        thisInstance = (H) this;
     }
 
     @Override
@@ -45,18 +49,11 @@ public class ChunkedContentHandler extends PipedContentHandler<Boolean> {
     throws Exception {
         try {
             final JsonParser parser = mapper.getFactory().createParser(input);
-            final MappingIterator<JsonNode> iterator = mapper.readValues(parser, JsonNode.class);
+            final MappingIterator<? extends Chunk<T, H>> iterator = mapper.readValues(parser, chunkType);
             while (iterator.hasNextValue()) {
-                final JsonNode bucketsOrKeys = iterator.next();
-                for (JsonNode arrayOrString: bucketsOrKeys) {
-                    if (arrayOrString.isTextual()) {
-                        if (!puttable.put(arrayOrString.asText())) return FALSE;
-                    } else if (arrayOrString.isArray()) {
-                        for (JsonNode arrayValue: arrayOrString) {
-                            if (!puttable.put(arrayValue.asText())) return FALSE;
-                        }
-                    }
-                }
+                final Chunk<T, H> chunk = iterator.next();
+                if (chunk.putAll(partial, thisInstance)) continue;
+                else return false;
             }
             return puttable.close();
         } catch (Throwable throwable) {
@@ -64,5 +61,19 @@ public class ChunkedContentHandler extends PipedContentHandler<Boolean> {
             if (throwable instanceof Exception) throw (Exception) throwable;
             throw new ExecutionException(throwable);
         }
+    }
+
+    public boolean put(T instance) {
+        return puttable.put(instance);
+    }
+
+    public boolean fail(Throwable throwable) {
+        return puttable.fail(throwable);
+    }
+
+    public static abstract class Chunk<T, H extends ChunkedContentHandler<T, H>> {
+
+        public abstract boolean putAll(PartialResponse<Boolean> partial, H handler);
+
     }
 }

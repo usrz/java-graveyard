@@ -20,11 +20,8 @@ import java.util.Date;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 import org.usrz.libs.logging.Log;
 import org.usrz.libs.riak.AbstractJsonClient;
@@ -44,9 +41,10 @@ import org.usrz.libs.riak.ResponseListenerAdapter;
 import org.usrz.libs.riak.RiakClient;
 import org.usrz.libs.riak.StoreRequest;
 import org.usrz.libs.riak.annotations.RiakIntrospector;
-import org.usrz.libs.riak.response.ChunkedContentHandler;
-import org.usrz.libs.riak.utils.ConvertingIterableFuture;
+import org.usrz.libs.riak.response.BucketListContentHandler;
+import org.usrz.libs.riak.response.KeyListContentHandler;
 import org.usrz.libs.riak.utils.IterableFuture;
+import org.usrz.libs.riak.utils.Puttable;
 import org.usrz.libs.riak.utils.QueueingFuture;
 import org.usrz.libs.riak.utils.RiakUtils;
 import org.usrz.libs.utils.beans.InstanceBuilder;
@@ -100,73 +98,23 @@ public class AsyncRiakClient extends AbstractJsonClient implements RiakClient {
     @Override
     public IterableFuture<Bucket> getBuckets()
     throws IOException {
-        final QueueingFuture<String> iterable = new QueueingFuture<String>();
+        final QueueingFuture<Bucket> iterable = new QueueingFuture<>();
 
-        final Request request = prepareGet("/buckets/?buckets=stream").build();
-        final ChunkedContentHandler handler = new ChunkedContentHandler(mapper, iterable);
+        final Request request = prepareGet("/buckets?buckets=stream").build();
+        final BucketListContentHandler handler = new BucketListContentHandler(mapper, iterable);
 
-        iterable.addFuture(this.execute(request, handler)
-                .addListener(new ResponseListenerAdapter<Boolean>() {
-
-                    @Override
-                    public void responseHandled(ResponseEvent<Boolean> event) {
-                        final int status = event.getResponse().getStatus();
-                        if (status == 200) return;
-                        iterable.fail(new IOException("Invalid status " + status + " for " + request.getUrl()));
-                    }
-
-                    @Override
-                    public void responseFailed(ResponseEvent<Boolean> event) {
-                        iterable.fail(event.getThrowable());
-                    }
-
-                }));
-
-        return new ConvertingIterableFuture<Bucket, String>(iterable) {
-
-            @Override
-            public Bucket next(long timeout, TimeUnit unit)
-            throws InterruptedException, ExecutionException, TimeoutException {
-                return getBucket(future.next(timeout, unit));
-            }
-
-        };
+        return iterable.addFuture(iterate(request, iterable, handler));
     }
 
     @Override
     public IterableFuture<Key> getKeys(final Bucket bucket)
     throws IOException {
-        final QueueingFuture<String> iterable = new QueueingFuture<String>();
+        final QueueingFuture<Key> iterable = new QueueingFuture<>();
 
         final Request request = prepareGet(bucket.getLocation() + "keys/?keys=stream").build();
-        final ChunkedContentHandler handler = new ChunkedContentHandler(mapper, iterable);
+        final KeyListContentHandler handler = new KeyListContentHandler(mapper, bucket, iterable);
 
-        iterable.addFuture(this.execute(request, handler)
-                .addListener(new ResponseListenerAdapter<Boolean>() {
-                    @Override
-                    public void responseHandled(ResponseEvent<Boolean> event) {
-                        final int status = event.getResponse().getStatus();
-                        System.err.println("HANDLED " + status);
-                        if (status == 200) return;
-                        iterable.fail(new IOException("Invalid status " + status + " for " + request.getUrl()));
-                    }
-
-                    @Override
-                    public void responseFailed(ResponseEvent<Boolean> event) {
-                        System.err.println("FAIL " + event.getThrowable());
-                        iterable.fail(event.getThrowable());
-                    }
-                }));
-
-        return new ConvertingIterableFuture<Key, String>(iterable) {
-
-            @Override
-            public Key next(long timeout, TimeUnit unit)
-            throws InterruptedException, ExecutionException, TimeoutException {
-                return new Key(bucket, future.next(timeout, unit));
-            }
-
-        };
+        return iterable.addFuture(iterate(request, iterable, handler));
     }
 
     /* ====================================================================== */
@@ -231,6 +179,26 @@ public class AsyncRiakClient extends AbstractJsonClient implements RiakClient {
         future.addFuture(client.executeRequest(request, new AsyncResponseHandler<>(this, request, handler, future)));
         return future;
 
+    }
+
+    protected <T, R> ResponseFuture<R> iterate(final Request request, final Puttable<T> iterable, ContentHandler<R> handler)
+    throws IOException {
+        return this.execute(request, handler)
+                .addListener(new ResponseListenerAdapter<R>() {
+
+                    @Override
+                    public void responseHandled(ResponseEvent<R> event) {
+                        final int status = event.getResponse().getStatus();
+                        if (status == 200) return;
+                        iterable.fail(new IOException("Invalid status " + status + " for " + request.getUrl()));
+                    }
+
+                    @Override
+                    public void responseFailed(ResponseEvent<R> event) {
+                        iterable.fail(event.getThrowable());
+                    }
+
+                });
     }
 
     /* ====================================================================== */
