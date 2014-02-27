@@ -18,19 +18,20 @@ package org.usrz.libs.riak.utils;
 import static java.lang.Long.MAX_VALUE;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
+import java.util.ConcurrentModificationException;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
-import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicReference;
 
-public class QueueingFuture<T> extends AbstractFuture<Iterator<T>>
+public class QueueingFuture<T> extends SettableFuture<Iterator<T>>
 implements IterableFuture<T>, Puttable<T> {
 
-    private final LinkedBlockingQueue<Reference<T>> queue = new LinkedBlockingQueue<>();
-    private volatile Reference<T> last;
+    private final LinkedBlockingQueue<Reference> queue = new LinkedBlockingQueue<>();
+    private final AtomicReference<Reference> last = new AtomicReference<>();
 
     /* ====================================================================== */
 
@@ -43,69 +44,56 @@ implements IterableFuture<T>, Puttable<T> {
     @Override
     public boolean hasNext(long timeout, TimeUnit unit)
     throws InterruptedException, TimeoutException {
-        if (last != null) return true;
+        if (last.get() != null) return true;
 
-        final Reference<T> reference = queue.poll(timeout, unit);
+        final Reference reference = queue.poll(timeout, unit);
         if (reference == null) throw new TimeoutException();
-        return end != (last = reference);
+        if (last.compareAndSet(null, reference)) {
+            return end != reference;
+        } else {
+            throw new ConcurrentModificationException();
+        }
     }
 
     @Override
     public T next(long timeout, TimeUnit unit)
     throws InterruptedException, ExecutionException, TimeoutException {
-        if (!hasNext(timeout, unit)) throw new NoSuchElementException();
-
-        /*
-         * "last.get()" will throw an exception (if it needs to) so that
-         * the assignment to "null" in the next line will never succeeed
-         */
-        final T next = last.get();
-        last = null;
-        return next;
+        if (hasNext(timeout, unit)) {
+            final Reference reference = last.getAndSet(null);
+            if (reference == null) {
+                throw new ConcurrentModificationException();
+            } else {
+                return reference.get();
+            }
+        } else {
+            throw new NoSuchElementException();
+        }
     }
 
     /* ====================================================================== */
 
     @Override
-    public void put(T instance) {
-        if (outcome.get() == null) {
-            queue.add(new NormalReference(instance));
-            return;
-        } else switch(outcome.get()) {
-            case CANCELLED: throw new CancellationException("Cancelled");
-            case COMPLETED: throw new IllegalStateException("Completed");
-        }
+    public Iterator<T> get(long timeout, TimeUnit unit) {
+        return this;
     }
 
     @Override
-    public void close() {
-        if (outcome.compareAndSet(null, Outcome.COMPLETED)) {
-            queue.add(end);
-        } else switch(outcome.get()) {
-            case CANCELLED: throw new CancellationException("Canceled");
-            case COMPLETED: throw new IllegalStateException("Completed");
-        }
+    public boolean put(T instance) {
+        if (isDone()) return false;
+        return queue.add(new Reference(instance));
     }
 
     @Override
-    protected void failed(Throwable throwable) {
-        queue.add(new ErrorReference(throwable));
+    public boolean close() {
+        if (isDone()) return false;
+        queue.add(end);
+        return super.set(this);
     }
 
     /* ====================================================================== */
 
     @Override
     public Iterator<T> iterator() {
-        return this;
-    }
-
-    @Override
-    public Iterator<T> get() {
-        return this;
-    }
-
-    @Override
-    public Iterator<T> get(long timeout, TimeUnit unit) {
         return this;
     }
 
@@ -145,37 +133,25 @@ implements IterableFuture<T>, Puttable<T> {
 
     /* ====================================================================== */
 
-    private static interface Reference<T> {
-        T get() throws ExecutionException;
-    }
+    private class Reference {
 
-    private class NormalReference implements Reference<T> {
         private final T reference;
 
-        private NormalReference(T reference) {
+        private Reference(T reference) {
             this.reference = reference;
         }
 
-        @Override
         public T get() {
             return reference;
         }
     }
 
-    private class ErrorReference implements Reference<T> {
-        private final ExecutionException exception;
-
-        private ErrorReference(Throwable throwable) {
-            this.exception = new ExecutionException(throwable);
-        }
+    private final Reference end = new Reference(null) {
 
         @Override
-        public T get() throws ExecutionException {
-            throw exception;
+        public T get() {
+            throw new NoSuchElementException();
         }
-    }
-
-    private final Reference<T> end = new Reference<T>() {
-        @Override public T get() { throw new NoSuchElementException(); }
     };
+
 }

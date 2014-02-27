@@ -15,15 +15,13 @@
  * ========================================================================== */
 package org.usrz.libs.riak.utils;
 
-import java.io.Closeable;
 
-public interface Puttable<T> extends Closeable, Fallible {
+public interface Puttable<T> {
 
-    public void put(T instance)
-    throws IllegalStateException;
+    public boolean put(T instance);
 
-    @Override
-    public void close()
-    throws IllegalStateException;
+    public boolean fail(Throwable throwable);
+
+    public boolean close();
 
 }

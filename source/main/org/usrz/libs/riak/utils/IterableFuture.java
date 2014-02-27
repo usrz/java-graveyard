@@ -24,12 +24,6 @@ import java.util.concurrent.TimeoutException;
 public interface IterableFuture<T>
 extends Future<Iterator<T>>, Iterable<T>, Iterator<T> {
 
-    @Override
-    public Iterator<T> get();
-
-    @Override
-    public Iterator<T> get(long timeout, TimeUnit unit);
-
     public boolean hasNext(long timeout, TimeUnit unit)
     throws InterruptedException, TimeoutException;
 

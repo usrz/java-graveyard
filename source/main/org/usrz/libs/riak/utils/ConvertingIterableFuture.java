@@ -23,11 +23,11 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-public abstract class ConvertingFuture<T, F> implements IterableFuture<T> {
+public abstract class ConvertingIterableFuture<T, F> implements IterableFuture<T> {
 
     protected final IterableFuture<F> future;
 
-    protected ConvertingFuture(IterableFuture<F> future) {
+    protected ConvertingIterableFuture(IterableFuture<F> future) {
         if (future == null) throw new NullPointerException("Null future");
         this.future = future;
     }

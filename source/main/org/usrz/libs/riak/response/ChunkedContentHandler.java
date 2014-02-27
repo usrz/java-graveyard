@@ -15,49 +15,54 @@
  * ========================================================================== */
 package org.usrz.libs.riak.response;
 
+import static java.lang.Boolean.FALSE;
+
 import java.io.InputStream;
+import java.util.concurrent.ExecutionException;
 
 import org.usrz.libs.riak.PartialResponse;
-import org.usrz.libs.riak.utils.IterableFuture;
-import org.usrz.libs.riak.utils.QueueingFuture;
+import org.usrz.libs.riak.utils.Puttable;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.MappingIterator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-public class ChunkedContentHandler extends PipedContentHandler<IterableFuture<String>> {
+public class ChunkedContentHandler extends PipedContentHandler<Boolean> {
 
-    private final QueueingFuture<String> queue;
+    private final Puttable<String> puttable;
     private final ObjectMapper mapper;
 
-    public ChunkedContentHandler(ObjectMapper mapper, QueueingFuture<String> queue) {
+    public ChunkedContentHandler(ObjectMapper mapper, Puttable<String> puttable) {
         if (mapper == null) throw new NullPointerException("Null object mapper");
-        if (queue == null) throw new NullPointerException("Null queue");
+        if (puttable == null) throw new NullPointerException("Null queue");
         this.mapper = mapper;
-        this.queue = queue;
+        this.puttable = puttable;
     }
 
     @Override
-    protected IterableFuture<String> read(PartialResponse<IterableFuture<String>> partial, InputStream input)
+    protected Boolean read(PartialResponse<Boolean> partial, InputStream input)
     throws Exception {
-        final JsonParser parser = mapper.getFactory().createParser(input);
-        final MappingIterator<JsonNode> iterator = mapper.readValues(parser, JsonNode.class);
-        while (iterator.hasNextValue()) {
-            final JsonNode bucketsOrKeys = iterator.next();
-            for (JsonNode arrayOrString: bucketsOrKeys) {
-                if (arrayOrString.isTextual()) {
-                    queue.put(arrayOrString.asText());
-                } else if (arrayOrString.isArray()) {
-                    for (JsonNode arrayValue: arrayOrString) {
-                        queue.put(arrayValue.asText());
+        try {
+            final JsonParser parser = mapper.getFactory().createParser(input);
+            final MappingIterator<JsonNode> iterator = mapper.readValues(parser, JsonNode.class);
+            while (iterator.hasNextValue()) {
+                final JsonNode bucketsOrKeys = iterator.next();
+                for (JsonNode arrayOrString: bucketsOrKeys) {
+                    if (arrayOrString.isTextual()) {
+                        if (!puttable.put(arrayOrString.asText())) return FALSE;
+                    } else if (arrayOrString.isArray()) {
+                        for (JsonNode arrayValue: arrayOrString) {
+                            if (!puttable.put(arrayValue.asText())) return FALSE;
+                        }
                     }
                 }
             }
+            return puttable.close();
+        } catch (Throwable throwable) {
+            puttable.fail(throwable);
+            if (throwable instanceof Exception) throw (Exception) throwable;
+            throw new ExecutionException(throwable);
         }
-
-        /* If an exception is thrown, the ResponseHandler will fail the puttable */
-        queue.close();
-        return queue;
     }
 }
