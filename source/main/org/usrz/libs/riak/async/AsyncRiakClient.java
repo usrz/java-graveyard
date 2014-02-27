@@ -20,8 +20,12 @@ import java.util.Date;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import org.usrz.libs.logging.Log;
 import org.usrz.libs.riak.AbstractJsonClient;
@@ -39,7 +43,10 @@ import org.usrz.libs.riak.Response;
 import org.usrz.libs.riak.RiakClient;
 import org.usrz.libs.riak.StoreRequest;
 import org.usrz.libs.riak.annotations.RiakIntrospector;
+import org.usrz.libs.riak.response.ChunkedContentHandler;
+import org.usrz.libs.riak.utils.ConvertingIterableFuture;
 import org.usrz.libs.riak.utils.IterableFuture;
+import org.usrz.libs.riak.utils.QueueingFuture;
 import org.usrz.libs.riak.utils.RiakUtils;
 import org.usrz.libs.riak.utils.SettableFuture;
 import org.usrz.libs.utils.beans.InstanceBuilder;
@@ -93,14 +100,47 @@ public class AsyncRiakClient extends AbstractJsonClient implements RiakClient {
     @Override
     public IterableFuture<Bucket> getBuckets()
     throws IOException {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException();
+        final QueueingFuture<String> iterable = new QueueingFuture<String>();
+
+        final Request request = prepareGet("/buckets/?buckets=stream").build();
+        final ChunkedContentHandler handler = new ChunkedContentHandler(mapper, iterable);
+
+        final Future<Response<Boolean>> future = this.execute(request, handler);
+
+        // TODO add a handler to the future to notify "iterable" on failure.
+        iterable.addFuture(future);
+        return new ConvertingIterableFuture<Bucket, String>(iterable) {
+
+            @Override
+            public Bucket next(long timeout, TimeUnit unit)
+            throws InterruptedException, ExecutionException, TimeoutException {
+                return getBucket(future.next(timeout, unit));
+            }
+
+        };
     }
 
     @Override
-    public IterableFuture<Key> getKeys(Bucket bucket) throws IOException {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException();
+    public IterableFuture<Key> getKeys(final Bucket bucket)
+    throws IOException {
+        final QueueingFuture<String> iterable = new QueueingFuture<String>();
+
+        final Request request = prepareGet(bucket.getLocation() + "keys/?keys=stream").build();
+        final ChunkedContentHandler handler = new ChunkedContentHandler(mapper, iterable);
+
+        final Future<Response<Boolean>> future = this.execute(request, handler);
+
+        // TODO add a handler to the future to notify "iterable" on failure.
+        iterable.addFuture(future);
+        return new ConvertingIterableFuture<Key, String>(iterable) {
+
+            @Override
+            public Key next(long timeout, TimeUnit unit)
+            throws InterruptedException, ExecutionException, TimeoutException {
+                return new Key(bucket, future.next(timeout, unit));
+            }
+
+        };
     }
 
     /* ====================================================================== */
