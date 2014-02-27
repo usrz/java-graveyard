@@ -16,12 +16,11 @@
 package org.usrz.libs.riak.request;
 
 import java.io.IOException;
-import java.util.concurrent.Future;
 
 import org.usrz.libs.riak.Bucket;
 import org.usrz.libs.riak.DeleteRequest;
 import org.usrz.libs.riak.Key;
-import org.usrz.libs.riak.Response;
+import org.usrz.libs.riak.ResponseFuture;
 
 public abstract class AbstractDeleteRequest
 extends AbstractRequest<Boolean, DeleteRequest>
@@ -34,13 +33,13 @@ implements DeleteRequest {
     /* ====================================================================== */
 
     @Override
-    protected Future<Response<Boolean>> execute(Bucket bucket)
+    protected ResponseFuture<Boolean> execute(Bucket bucket)
     throws IOException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    protected abstract Future<Response<Boolean>> execute(Key key)
+    protected abstract ResponseFuture<Boolean> execute(Key key)
     throws IOException;
 
 }

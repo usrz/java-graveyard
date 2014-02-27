@@ -19,6 +19,8 @@ import java.util.EventObject;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 
+import org.usrz.libs.riak.utils.UncheckedExecutionException;
+
 public class ResponseEvent<T> extends EventObject {
 
     private final CancellationException cancellationException;
@@ -59,10 +61,19 @@ public class ResponseEvent<T> extends EventObject {
         return (RiakClient) super.source;
     }
 
-    public Response<T> getResponse()
-    throws CancellationException, ExecutionException {
+    public Response<T> getResponse() {
         if (cancellationException != null) throw cancellationException;
-        if (executionException != null) throw executionException;
+        if (executionException != null) throw new UncheckedExecutionException(executionException);
         return response;
+    }
+
+    public T getContent() {
+        return getResponse().getContent();
+    }
+
+    public Throwable getThrowable() {
+        return cancellationException != null ? cancellationException :
+               executionException != null ? executionException.getCause() :
+                   null;
     }
 }

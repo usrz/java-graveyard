@@ -19,6 +19,6 @@ import java.util.concurrent.Future;
 
 public interface ResponseFuture<T> extends Future<Response<T>> {
 
-    public void addListener(ResponseListener<T> listener);
+    public ResponseFuture<T> addListener(ResponseListener<T> listener);
 
 }

@@ -16,13 +16,12 @@
 package org.usrz.libs.riak.request;
 
 import java.io.IOException;
-import java.util.concurrent.Future;
 
 import org.usrz.libs.riak.Bucket;
 import org.usrz.libs.riak.ContentHandler;
 import org.usrz.libs.riak.FetchRequest;
 import org.usrz.libs.riak.Key;
-import org.usrz.libs.riak.Response;
+import org.usrz.libs.riak.ResponseFuture;
 
 public abstract class AbstractFetchRequest<T>
 extends AbstractContentRequest<T, FetchRequest<T>>
@@ -33,13 +32,13 @@ implements FetchRequest<T> {
     }
 
     @Override
-    protected Future<Response<T>> execute(Bucket bucket, ContentHandler<T> handler)
+    protected ResponseFuture<T> execute(Bucket bucket, ContentHandler<T> handler)
     throws IOException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    protected abstract Future<Response<T>> execute(Key key, ContentHandler<T> handler)
+    protected abstract ResponseFuture<T> execute(Key key, ContentHandler<T> handler)
     throws IOException;
 
 }

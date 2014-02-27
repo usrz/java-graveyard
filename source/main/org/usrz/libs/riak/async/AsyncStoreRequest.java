@@ -17,15 +17,15 @@ package org.usrz.libs.riak.async;
 
 import java.io.IOException;
 import java.util.Map;
-import java.util.concurrent.Future;
 
 import org.usrz.libs.riak.Bucket;
 import org.usrz.libs.riak.ContentHandler;
 import org.usrz.libs.riak.Key;
-import org.usrz.libs.riak.Response;
+import org.usrz.libs.riak.ResponseEvent;
+import org.usrz.libs.riak.ResponseFuture;
+import org.usrz.libs.riak.ResponseListener;
 import org.usrz.libs.riak.request.AbstractStoreRequest;
 import org.usrz.libs.riak.response.VectorClockContentHandler;
-import org.usrz.libs.riak.utils.SettableFuture;
 import org.usrz.libs.utils.beans.Mapper;
 
 import com.ning.http.client.AsyncHttpClient.BoundRequestBuilder;
@@ -66,7 +66,7 @@ implements Mapper {
     }
 
     @Override
-    protected Future<Response<T>> execute(Bucket bucket, T instance, ContentHandler<T> handler)
+    protected ResponseFuture<T> execute(Bucket bucket, T instance, ContentHandler<T> handler)
     throws IOException {
 
         final String location = bucket.getLocation() + "keys/";
@@ -77,7 +77,7 @@ implements Mapper {
     }
 
     @Override
-    protected Future<Response<T>> execute(final Key key, T instance, final ContentHandler<T> handler, String vectorClock)
+    protected ResponseFuture<T> execute(final Key key, T instance, final ContentHandler<T> handler, String vectorClock)
     throws IOException {
 
         final BoundRequestBuilder builder = client.preparePut(key.getLocation());
@@ -93,26 +93,45 @@ implements Mapper {
         } else {
 
             /* Call "HEAD" to get the cector clock */
-            final SettableFuture<Response<T>> future = new SettableFuture<>();
-            future.addFuture(client.getExecutorService().submit(new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            final String vclock = client.fetch(key, new VectorClockContentHandler())
-                                                        .setReturnBody(false)
-                                                        .execute()
-                                                        .get()
-                                                        .getContent();
+            final AsyncResponseFuture<T> future = new AsyncResponseFuture<>(client);
 
-                            /* We might now have a vector clock, just do the PUT */
-                            request.getHeaders().replace("X-Riak-Vclock", vclock);
-                            future.set(client.execute(request, handler).get());
+            /* Instrument our future with a couple of handlers and return it */
+            return future.addFuture(client.fetch(key, new VectorClockContentHandler()).execute()
+                .addListener(new ResponseListener<String>() {
+
+                    @Override
+                    public void responseFailed(ResponseEvent<String> event) {
+                        /* Failed HEAD, notify and exit */
+                        future.fail(event.getThrowable());
+                    }
+
+                    @Override
+                    public void responseHandled(ResponseEvent<String> event) {
+                        try {
+                            /* Successful HEAD, initiate PUT */
+                            final String vectorClock = event.getContent();
+                            request.getHeaders().replace("X-Riak-Vclock", vectorClock);
+                            client.execute(request, handler)
+                                  .addListener(new ResponseListener<T>() {
+
+                                      @Override
+                                      public void responseHandled(ResponseEvent<T> event) {
+                                          /* Successful PUT, notify and exit */
+                                          future.set(event.getResponse());
+                                      }
+
+                                      @Override
+                                      public void responseFailed(ResponseEvent<T> event) {
+                                          /* Failed PUT, notify and exit */
+                                          future.fail(event.getThrowable());
+                                      }
+                                  });
                         } catch (Throwable throwable) {
+                            /* Failure submitting PUT, notify and exit */
                             future.fail(throwable);
                         }
                     }
                 }));
-            return future;
         }
     }
 }

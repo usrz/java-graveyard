@@ -29,14 +29,14 @@ import org.usrz.libs.riak.MetadataBuilder;
 import com.ning.http.client.FluentCaseInsensitiveStringsMap;
 import com.ning.http.client.HttpResponseHeaders;
 
-public class AsyncPartialRespnse<T> extends AbstractPartialResponse<T> {
+public class AsyncPartialResponse<T> extends AbstractPartialResponse<T> {
 
     private final String vectorClock;
     private final Date lastModified;
     private final String location;
     private final Key key;
 
-    protected AsyncPartialRespnse(AsyncRiakClient client, HttpResponseHeaders headers, int status) {
+    protected AsyncPartialResponse(AsyncRiakClient client, HttpResponseHeaders headers, int status) {
         super(client, status);
 
         /* Get our headers map */

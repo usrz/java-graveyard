@@ -16,12 +16,11 @@
 package org.usrz.libs.riak.request;
 
 import java.io.IOException;
-import java.util.concurrent.Future;
 
 import org.usrz.libs.riak.Bucket;
 import org.usrz.libs.riak.Key;
 import org.usrz.libs.riak.Request;
-import org.usrz.libs.riak.Response;
+import org.usrz.libs.riak.ResponseFuture;
 import org.usrz.libs.riak.RiakClient;
 
 public abstract class AbstractRequest<T, R extends Request<T>
@@ -60,15 +59,15 @@ implements Request<T>, KeyedRequest<T, R>, BucketedRequest<T, R> {
     /* ====================================================================== */
 
     @Override
-    public final Future<Response<T>> execute()
+    public final ResponseFuture<T> execute()
     throws IOException {
         return key == null ? execute(bucket) : execute(key);
     }
 
-    protected abstract Future<Response<T>> execute(Bucket bucket)
+    protected abstract ResponseFuture<T> execute(Bucket bucket)
     throws IOException;
 
-    protected abstract Future<Response<T>> execute(Key key)
+    protected abstract ResponseFuture<T> execute(Key key)
     throws IOException;
 
     /* ====================================================================== */

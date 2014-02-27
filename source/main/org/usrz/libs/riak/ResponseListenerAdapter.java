@@ -15,12 +15,20 @@
  * ========================================================================== */
 package org.usrz.libs.riak;
 
-import java.util.EventListener;
+public class ResponseListenerAdapter<T> implements ResponseListener<T> {
 
-public interface ResponseListener<T> extends EventListener {
+    protected ResponseListenerAdapter() {
+        /* Do nothing */
+    }
 
-    public void responseHandled(ResponseEvent<T> event);
+    @Override
+    public void responseHandled(ResponseEvent<T> event) {
+        /* Do nothing */
+    }
 
-    public void responseFailed(ResponseEvent<T> event);
+    @Override
+    public void responseFailed(ResponseEvent<T> event) {
+        /* Do nothing */
+    }
 
 }

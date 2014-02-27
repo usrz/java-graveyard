@@ -16,7 +16,6 @@
 package org.usrz.libs.riak.request;
 
 import java.io.IOException;
-import java.util.concurrent.Future;
 
 import org.usrz.libs.riak.Bucket;
 import org.usrz.libs.riak.ContentHandler;
@@ -24,7 +23,7 @@ import org.usrz.libs.riak.IndexMap;
 import org.usrz.libs.riak.Key;
 import org.usrz.libs.riak.LinksMap;
 import org.usrz.libs.riak.Metadata;
-import org.usrz.libs.riak.Response;
+import org.usrz.libs.riak.ResponseFuture;
 import org.usrz.libs.riak.StoreRequest;
 import org.usrz.libs.riak.annotations.RiakIntrospector;
 
@@ -61,21 +60,21 @@ implements StoreRequest<T> {
     /* ====================================================================== */
 
     @Override
-    protected final Future<Response<T>> execute(Bucket bucket, ContentHandler<T> handler)
+    protected final ResponseFuture<T> execute(Bucket bucket, ContentHandler<T> handler)
     throws IOException {
         return execute(bucket, instance, handler);
     }
 
-    protected abstract Future<Response<T>> execute(Bucket bucket, T instance, ContentHandler<T> handler)
+    protected abstract ResponseFuture<T> execute(Bucket bucket, T instance, ContentHandler<T> handler)
     throws IOException;
 
     @Override
-    protected final Future<Response<T>> execute(Key key, ContentHandler<T> handler)
+    protected final ResponseFuture<T> execute(Key key, ContentHandler<T> handler)
     throws IOException {
         return execute(key, instance, handler, vectorClock);
     }
 
-    protected abstract Future<Response<T>> execute(Key key, T instance, ContentHandler<T> handler, String vectorClock)
+    protected abstract ResponseFuture<T> execute(Key key, T instance, ContentHandler<T> handler, String vectorClock)
     throws IOException;
 
     /* ====================================================================== */

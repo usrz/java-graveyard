@@ -23,7 +23,6 @@ import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -39,7 +38,9 @@ import org.usrz.libs.riak.Key;
 import org.usrz.libs.riak.LinksMap;
 import org.usrz.libs.riak.Metadata;
 import org.usrz.libs.riak.Quorum;
-import org.usrz.libs.riak.Response;
+import org.usrz.libs.riak.ResponseEvent;
+import org.usrz.libs.riak.ResponseFuture;
+import org.usrz.libs.riak.ResponseListenerAdapter;
 import org.usrz.libs.riak.RiakClient;
 import org.usrz.libs.riak.StoreRequest;
 import org.usrz.libs.riak.annotations.RiakIntrospector;
@@ -48,7 +49,6 @@ import org.usrz.libs.riak.utils.ConvertingIterableFuture;
 import org.usrz.libs.riak.utils.IterableFuture;
 import org.usrz.libs.riak.utils.QueueingFuture;
 import org.usrz.libs.riak.utils.RiakUtils;
-import org.usrz.libs.riak.utils.SettableFuture;
 import org.usrz.libs.utils.beans.InstanceBuilder;
 import org.usrz.libs.utils.beans.MapperBuilder;
 
@@ -105,10 +105,23 @@ public class AsyncRiakClient extends AbstractJsonClient implements RiakClient {
         final Request request = prepareGet("/buckets/?buckets=stream").build();
         final ChunkedContentHandler handler = new ChunkedContentHandler(mapper, iterable);
 
-        final Future<Response<Boolean>> future = this.execute(request, handler);
+        iterable.addFuture(this.execute(request, handler)
+                .addListener(new ResponseListenerAdapter<Boolean>() {
 
-        // TODO add a handler to the future to notify "iterable" on failure.
-        iterable.addFuture(future);
+                    @Override
+                    public void responseHandled(ResponseEvent<Boolean> event) {
+                        final int status = event.getResponse().getStatus();
+                        if (status == 200) return;
+                        iterable.fail(new IOException("Invalid status " + status + " for " + request.getUrl()));
+                    }
+
+                    @Override
+                    public void responseFailed(ResponseEvent<Boolean> event) {
+                        iterable.fail(event.getThrowable());
+                    }
+
+                }));
+
         return new ConvertingIterableFuture<Bucket, String>(iterable) {
 
             @Override
@@ -128,10 +141,23 @@ public class AsyncRiakClient extends AbstractJsonClient implements RiakClient {
         final Request request = prepareGet(bucket.getLocation() + "keys/?keys=stream").build();
         final ChunkedContentHandler handler = new ChunkedContentHandler(mapper, iterable);
 
-        final Future<Response<Boolean>> future = this.execute(request, handler);
+        iterable.addFuture(this.execute(request, handler)
+                .addListener(new ResponseListenerAdapter<Boolean>() {
+                    @Override
+                    public void responseHandled(ResponseEvent<Boolean> event) {
+                        final int status = event.getResponse().getStatus();
+                        System.err.println("HANDLED " + status);
+                        if (status == 200) return;
+                        iterable.fail(new IOException("Invalid status " + status + " for " + request.getUrl()));
+                    }
 
-        // TODO add a handler to the future to notify "iterable" on failure.
-        iterable.addFuture(future);
+                    @Override
+                    public void responseFailed(ResponseEvent<Boolean> event) {
+                        System.err.println("FAIL " + event.getThrowable());
+                        iterable.fail(event.getThrowable());
+                    }
+                }));
+
         return new ConvertingIterableFuture<Key, String>(iterable) {
 
             @Override
@@ -196,12 +222,12 @@ public class AsyncRiakClient extends AbstractJsonClient implements RiakClient {
         return client.prepareDelete(getUrl(location));
     }
 
-    protected <T> SettableFuture<Response<T>> execute(Request request, ContentHandler<T> handler)
+    protected <T> ResponseFuture<T> execute(Request request, ContentHandler<T> handler)
     throws IOException {
         log.debug("Calling %s on %s", request.getMethod(), request.getUrl());
 
         /* See https://github.com/AsyncHttpClient/async-http-client/issues/489 */
-        final SettableFuture<Response<T>> future = new SettableFuture<>();
+        final AsyncResponseFuture<T> future = new AsyncResponseFuture<>(this);
         future.addFuture(client.executeRequest(request, new AsyncResponseHandler<>(this, request, handler, future)));
         return future;
 
