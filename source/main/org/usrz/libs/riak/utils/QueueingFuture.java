@@ -23,6 +23,7 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -72,6 +73,12 @@ implements IterableFuture<T>, Puttable<T> {
     }
 
     /* ====================================================================== */
+
+    @Override
+    public QueueingFuture<T> addFuture(Future<?> future) {
+        super.addFuture(future);
+        return this;
+    }
 
     @Override
     public Iterator<T> get(long timeout, TimeUnit unit) {
