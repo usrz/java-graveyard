@@ -41,7 +41,7 @@ public class AsyncResponseHandler<T> implements AsyncHandler<Response<T>> {
     private final AsyncRiakClient client;
     private final Request request;
 
-    private AsyncPartial<T> partial = null;
+    private AsyncPartialRespnse<T> partial = null;
     private OutputStream output = null;
     private int status = -1;
 
@@ -73,7 +73,7 @@ public class AsyncResponseHandler<T> implements AsyncHandler<Response<T>> {
         log.trace("Received headers for request %s", headers.getUrl());
 
         /* Create our partial response */
-        this.partial = new AsyncPartial<T>(client, headers, status);
+        this.partial = new AsyncPartialRespnse<T>(client, headers, status);
 
         /*
          * Statuses:
