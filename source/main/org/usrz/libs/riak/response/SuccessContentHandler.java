@@ -28,7 +28,6 @@ public class SuccessContentHandler extends NullContentHandler<Boolean> {
     @Override
     protected Boolean call(PartialResponse<Boolean> partial)
     throws IOException {
-        System.err.println("CALLED WITH " + partial.isSuccessful());
         return partial.isSuccessful();
     }
 

@@ -24,7 +24,6 @@ public class Response<T> extends AbstractPartialResponse<T> {
 
     public Response(PartialResponse<T> partial, T content) {
         super(partial.getRiakClient(), partial.getStatus());
-        System.err.println("Partial " + partial.getClass() + " " + partial.getStatus());
         this.partial = partial;
         this.content = content;
     }

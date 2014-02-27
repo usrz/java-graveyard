@@ -72,7 +72,7 @@ public class AsyncResponseHandler<T> implements AsyncHandler<Response<T>> {
     throws Exception {
         log.trace("Received headers for request %s", headers.getUrl());
 
-        System.err.println("STATUS IS " + this.status);
+        /* Create our partial response */
         this.partial = new AsyncPartial<T>(client, headers, status);
 
         /*
