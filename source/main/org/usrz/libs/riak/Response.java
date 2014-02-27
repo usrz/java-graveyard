@@ -23,7 +23,7 @@ public class Response<T> extends AbstractPartialResponse<T> {
     private final T content;
 
     public Response(PartialResponse<T> partial, T content) {
-        super(partial.getRiakClient(), partial.getStatus());
+        super(partial);
         this.partial = partial;
         this.content = content;
     }

@@ -21,10 +21,7 @@ import java.net.URI;
 import java.util.Date;
 
 import org.usrz.libs.riak.AbstractPartialResponse;
-import org.usrz.libs.riak.IndexMapBuilder;
 import org.usrz.libs.riak.Key;
-import org.usrz.libs.riak.LinksMapBuilder;
-import org.usrz.libs.riak.MetadataBuilder;
 
 import com.ning.http.client.FluentCaseInsensitiveStringsMap;
 import com.ning.http.client.HttpResponseHeaders;
@@ -37,7 +34,7 @@ public class AsyncPartialResponse<T> extends AbstractPartialResponse<T> {
     private final Key key;
 
     protected AsyncPartialResponse(AsyncRiakClient client, HttpResponseHeaders headers, int status) {
-        super(client, status);
+        super(client, headers.getHeaders(), status);
 
         /* Get our headers map */
         final FluentCaseInsensitiveStringsMap map = headers.getHeaders();
@@ -69,12 +66,6 @@ public class AsyncPartialResponse<T> extends AbstractPartialResponse<T> {
         } finally {
             this.lastModified = lastModified;
         }
-
-        /* Parse indexes, links and metadata */
-        getLinksMap().addAll(new LinksMapBuilder(client).parseHeaders(map.get("Link")).build());
-        getIndexMap().addAll(new IndexMapBuilder().parseHeaders(map).build());
-        getMetadata().addAll(new MetadataBuilder().parseHeaders(map).build());
-
     }
 
     @Override

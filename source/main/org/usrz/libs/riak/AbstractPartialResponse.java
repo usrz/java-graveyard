@@ -16,20 +16,43 @@
 package org.usrz.libs.riak;
 
 import java.util.Date;
+import java.util.Map;
 
 public abstract class AbstractPartialResponse<T> implements PartialResponse<T> {
 
-    private final Metadata metadata;
-    private final IndexMap indexMap;
     private final LinksMap linksMap;
+    private final IndexMap indexMap;
+    private final Metadata metadata;
     private final RiakClient client;
     private final int status;
 
-    protected AbstractPartialResponse(RiakClient client, int status) {
+    protected AbstractPartialResponse(PartialResponse<T> partial) {
+        this(partial.getRiakClient(),
+             partial.getLinksMap(),
+             partial.getIndexMap(),
+             partial.getMetadata(),
+             partial.getStatus());
+    }
+
+    protected AbstractPartialResponse(RiakClient client,
+                                      Map<String, ? extends Iterable<String>> map,
+                                      int status) {
+        this(client,
+             new LinksMapBuilder(client).parseHeaders(map.get("Link")).build(),
+             new IndexMapBuilder().parseHeaders(map).build(),
+             new MetadataBuilder().parseHeaders(map).build(),
+             status);
+    }
+
+        protected AbstractPartialResponse(RiakClient client,
+                                      LinksMap linksMap,
+                                      IndexMap indexMap,
+                                      Metadata metadata,
+                                      int status) {
         if (client == null) throw new NullPointerException("Null client");
-        this.linksMap = new LinksMap(client);
-        this.indexMap = new IndexMap();
-        this.metadata = new Metadata();
+        this.linksMap = linksMap == null ? new LinksMap(client) : linksMap;
+        this.indexMap = indexMap == null ? new IndexMap() : indexMap;
+        this.metadata = metadata == null ? new Metadata() : metadata;
         this.client = client;
         this.status = status;
     }
