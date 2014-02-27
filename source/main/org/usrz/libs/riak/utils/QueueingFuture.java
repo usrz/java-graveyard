@@ -21,6 +21,7 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import java.util.ConcurrentModificationException;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -90,6 +91,27 @@ implements IterableFuture<T>, Puttable<T> {
         return super.set(this);
     }
 
+    @Override
+    public boolean fail(Throwable throwable) {
+        if (super.fail(throwable)) {
+            this.queue.add(new ErrorReference(throwable));
+            return true;
+        } else {
+            return false;
+        }
+
+    }
+
+    @Override
+    public boolean cancel(boolean mayInterruptIfRunning) {
+        if (super.cancel(mayInterruptIfRunning)) {
+            this.queue.add(new ErrorReference(new CancellationException("Cancelled")));
+            return true;
+        } else {
+            return false;
+        }
+    }
+
     /* ====================================================================== */
 
     @Override
@@ -141,8 +163,27 @@ implements IterableFuture<T>, Puttable<T> {
             this.reference = reference;
         }
 
-        public T get() {
+        public T get()
+        throws ExecutionException  {
             return reference;
+        }
+    }
+
+    private class ErrorReference extends Reference {
+
+        private final ExecutionException exception;
+
+        private ErrorReference(Throwable throwable) {
+            super(null);
+            this.exception = throwable instanceof ExecutionException ?
+                    (ExecutionException) throwable :
+                    new ExecutionException(throwable);
+        }
+
+        @Override
+        public T get()
+        throws ExecutionException {
+            throw exception;
         }
     }
 

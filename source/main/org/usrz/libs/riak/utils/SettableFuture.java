@@ -42,7 +42,7 @@ public class SettableFuture<T> implements Future<T> {
         /* Nothing to do here */
     }
 
-    public final boolean fail(Throwable throwable) {
+    public boolean fail(Throwable throwable) {
         final Result result = new Result(null, throwable, false);
         if (this.result.compareAndSet(null, result)) {
             semaphore.release(MAX_VALUE);
@@ -53,7 +53,7 @@ public class SettableFuture<T> implements Future<T> {
         }
     }
 
-    public final boolean set(T object) {
+    public boolean set(T object) {
         final Result result = new Result(object, null, false);
         if (this.result.compareAndSet(null, result)) {
             semaphore.release(MAX_VALUE);
@@ -64,7 +64,7 @@ public class SettableFuture<T> implements Future<T> {
     }
 
     @Override
-    public final boolean cancel(boolean mayInterruptIfRunning) {
+    public boolean cancel(boolean mayInterruptIfRunning) {
         final Result result = new Result(null, null, true);
         if (this.result.compareAndSet(null, result)) {
             semaphore.release(MAX_VALUE);
@@ -76,18 +76,18 @@ public class SettableFuture<T> implements Future<T> {
     }
 
     @Override
-    public final boolean isCancelled() {
+    public boolean isCancelled() {
         final Result result = this.result.get();
         return result == null ? false : result.cancelled;
     }
 
     @Override
-    public final boolean isDone() {
+    public boolean isDone() {
         return this.result.get() != null;
     }
 
     @Override
-    public final T get()
+    public T get()
     throws InterruptedException, ExecutionException {
         try {
             return this.get(MAX_VALUE, MILLISECONDS);
@@ -116,7 +116,7 @@ public class SettableFuture<T> implements Future<T> {
 
     /* ====================================================================== */
 
-    public void addFuture(Future<?> future) {
+    public SettableFuture<T> addFuture(Future<?> future) {
         synchronized (this.futures) {
             final Result result = this.result.get();
             if (result != null) {
@@ -124,6 +124,7 @@ public class SettableFuture<T> implements Future<T> {
             } else {
                 this.futures.add(future);
             }
+            return this;
         }
     }
 
