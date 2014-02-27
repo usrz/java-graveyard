@@ -13,11 +13,19 @@
  * See the License for the specific language governing permissions and        *
  * limitations under the License.                                             *
  * ========================================================================== */
-package org.usrz.libs.riak;
+package org.usrz.libs.riak.request;
 
 import java.io.IOException;
 import java.util.concurrent.Future;
 
+import org.usrz.libs.riak.Bucket;
+import org.usrz.libs.riak.ContentHandler;
+import org.usrz.libs.riak.IndexMap;
+import org.usrz.libs.riak.Key;
+import org.usrz.libs.riak.LinksMap;
+import org.usrz.libs.riak.Metadata;
+import org.usrz.libs.riak.Response;
+import org.usrz.libs.riak.StoreRequest;
 import org.usrz.libs.riak.annotations.RiakIntrospector;
 
 public abstract class AbstractStoreRequest<T>

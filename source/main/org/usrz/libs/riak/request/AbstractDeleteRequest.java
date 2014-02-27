@@ -13,10 +13,15 @@
  * See the License for the specific language governing permissions and        *
  * limitations under the License.                                             *
  * ========================================================================== */
-package org.usrz.libs.riak;
+package org.usrz.libs.riak.request;
 
 import java.io.IOException;
 import java.util.concurrent.Future;
+
+import org.usrz.libs.riak.Bucket;
+import org.usrz.libs.riak.DeleteRequest;
+import org.usrz.libs.riak.Key;
+import org.usrz.libs.riak.Response;
 
 public abstract class AbstractDeleteRequest
 extends AbstractRequest<Boolean, DeleteRequest>

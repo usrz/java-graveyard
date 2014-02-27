@@ -18,9 +18,9 @@ package org.usrz.libs.riak.async;
 import java.io.IOException;
 import java.util.concurrent.Future;
 
-import org.usrz.libs.riak.AbstractDeleteRequest;
 import org.usrz.libs.riak.Key;
 import org.usrz.libs.riak.Response;
+import org.usrz.libs.riak.request.AbstractDeleteRequest;
 import org.usrz.libs.riak.response.SuccessContentHandler;
 import org.usrz.libs.utils.beans.Mapper;
 

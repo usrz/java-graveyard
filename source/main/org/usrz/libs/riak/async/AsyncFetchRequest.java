@@ -18,10 +18,10 @@ package org.usrz.libs.riak.async;
 import java.io.IOException;
 import java.util.concurrent.Future;
 
-import org.usrz.libs.riak.AbstractFetchRequest;
 import org.usrz.libs.riak.ContentHandler;
 import org.usrz.libs.riak.Key;
 import org.usrz.libs.riak.Response;
+import org.usrz.libs.riak.request.AbstractFetchRequest;
 import org.usrz.libs.utils.beans.Mapper;
 
 import com.ning.http.client.AsyncHttpClient.BoundRequestBuilder;

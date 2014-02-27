@@ -13,14 +13,16 @@
  * See the License for the specific language governing permissions and        *
  * limitations under the License.                                             *
  * ========================================================================== */
-package org.usrz.libs.riak;
+package org.usrz.libs.riak.request;
 
 import java.io.IOException;
 import java.util.concurrent.Future;
 
-import org.usrz.libs.riak.request.BucketedRequest;
-import org.usrz.libs.riak.request.KeyedRequest;
-import org.usrz.libs.riak.request.OptionalBodyRequest;
+import org.usrz.libs.riak.Bucket;
+import org.usrz.libs.riak.ContentHandler;
+import org.usrz.libs.riak.Key;
+import org.usrz.libs.riak.Request;
+import org.usrz.libs.riak.Response;
 
 public abstract class AbstractContentRequest<T, R extends Request<T>
                                                 & KeyedRequest<T, R>

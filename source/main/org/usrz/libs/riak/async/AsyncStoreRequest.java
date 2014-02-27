@@ -19,11 +19,11 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.Future;
 
-import org.usrz.libs.riak.AbstractStoreRequest;
 import org.usrz.libs.riak.Bucket;
 import org.usrz.libs.riak.ContentHandler;
 import org.usrz.libs.riak.Key;
 import org.usrz.libs.riak.Response;
+import org.usrz.libs.riak.request.AbstractStoreRequest;
 import org.usrz.libs.riak.response.VectorClockContentHandler;
 import org.usrz.libs.riak.utils.SettableFuture;
 import org.usrz.libs.utils.beans.Mapper;

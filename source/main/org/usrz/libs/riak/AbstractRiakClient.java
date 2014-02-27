@@ -20,7 +20,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import org.usrz.libs.riak.utils.ConvertingFuture;
+import org.usrz.libs.riak.utils.ConvertingIterableFuture;
 import org.usrz.libs.riak.utils.IterableFuture;
 
 public abstract class AbstractRiakClient implements RiakClient {
@@ -39,7 +39,7 @@ public abstract class AbstractRiakClient implements RiakClient {
     @Override
     public final IterableFuture<String> getBucketNames()
     throws IOException {
-        return new ConvertingFuture<String, Bucket>(getBuckets()) {
+        return new ConvertingIterableFuture<String, Bucket>(getBuckets()) {
             @Override
             public String next(long timeout, TimeUnit unit)
             throws InterruptedException, ExecutionException, TimeoutException {
@@ -63,7 +63,7 @@ public abstract class AbstractRiakClient implements RiakClient {
     @Override
     public final IterableFuture<String> getKeyNames(Bucket bucket)
     throws IOException {
-        return new ConvertingFuture<String, Key>(this.getKeys(bucket)) {
+        return new ConvertingIterableFuture<String, Key>(this.getKeys(bucket)) {
             @Override
             public String next(long timeout, TimeUnit unit)
             throws InterruptedException, ExecutionException, TimeoutException {
