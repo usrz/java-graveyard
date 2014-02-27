@@ -60,7 +60,7 @@ public class RiakIntrospectorTest extends AbstractTest {
         final IntrospectableObject object = new IntrospectableObject();
 
         assertEquals(introspector.getKeyName(object), "myKey");
-        assertEquals(introspector.getBucket(object), "myBucket");
+        assertEquals(introspector.getBucketName(object), "myBucket");
         assertEquals(introspector.getKey(object), new Key(client, "myBucket", "myKey"));
 
         final IndexMap index = introspector.getIndexMap(object);
@@ -202,19 +202,19 @@ public class RiakIntrospectorTest extends AbstractTest {
                                                            .add("field2", "value2")
                                                            .build();
 
-//    @Test
-//    public void testKey() {
-//        final KeyObject object = new KeyObject();
-//        assertNull(object.key);
-//        introspector.setKey(object, key);
-//        assertSame(object.key, key);
-//        final Key gotten = introspector.getKey(object);
-//        assertSame(gotten, key);
-//    }
-//
-//    private class KeyObject {
-//        @RiakKey private Key key;
-//    }
+    @Test
+    public void testKey() {
+        final KeyObject object = new KeyObject();
+        assertNull(object.key);
+        introspector.setKey(object, key);
+        assertSame(object.key, key);
+        final Key gotten = introspector.getKey(object);
+        assertSame(gotten, key);
+    }
+
+    private class KeyObject {
+        @RiakKey private Key key;
+    }
 
     /* ====================================================================== */
 
@@ -254,16 +254,16 @@ public class RiakIntrospectorTest extends AbstractTest {
         private String b; @RiakBucket public void setB(String b) { this.b = b; };
     }
 
-//    @Test
-//    public void testSimpleInstrumentationK() {
-//        final SimpleInstrumentableK object = new SimpleInstrumentableK();
-//        introspector.setKey(object, key);
-//        assertEquals(object.k, key.getKey());
-//        assertEquals(object.b, key.getBucket());
-//    }
-//
-//    private class SimpleInstrumentableK {
-//        private String k; @RiakKey    public void setK(String k) { this.k = k; };
-//        private String b; @RiakBucket public void setB(String b) { this.b = b; };
-//    }
+    @Test
+    public void testSimpleInstrumentationK() {
+        final SimpleInstrumentableK object = new SimpleInstrumentableK();
+        introspector.setKey(object, key);
+        assertEquals(object.k, key);
+        assertEquals(object.b, key.getBucket());
+    }
+
+    private class SimpleInstrumentableK {
+        private Key    k; @RiakKey    public void setK(Key    k) { this.k = k; };
+        private Bucket b; @RiakBucket public void setB(Bucket b) { this.b = b; };
+    }
 }

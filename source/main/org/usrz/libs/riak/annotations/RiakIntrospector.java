@@ -105,27 +105,20 @@ public class RiakIntrospector {
 
     /* ====================================================================== */
 
-    public <T> String getKeyName(T instance) {
-        final IntrospectionDescriptor<T> descriptor = descriptor(instance);
-
-        for (Entry<RiakKey, Set<IntrospectedProperty<T>>> entry: descriptor.getProperties(RiakKey.class).entrySet()) {
-            for (IntrospectedProperty<T> property: entry.getValue()) {
-                if (property.canRead()) return property.read(instance, String.class);
-            }
-        }
-
-        return null;
+    public <T> String getBucketName(T instance) {
+        final Bucket bucket = this.getBucket(instance);
+        return bucket == null ? null: bucket.getName();
     }
 
-    public <T> String getBucket(T instance) {
+    public <T> Bucket getBucket(T instance) {
         final IntrospectionDescriptor<T> descriptor = descriptor(instance);
 
         for (Entry<RiakBucket, Set<IntrospectedProperty<T>>> entry: descriptor.getProperties(RiakBucket.class).entrySet()) {
             for (IntrospectedProperty<T> property: entry.getValue()) {
                 if (property.canRead()) try {
-                    return property.read(instance, Bucket.class).getName();
+                    return property.read(instance, Bucket.class);
                 } catch (IntrospectionException exception) {
-                    return property.read(instance, String.class);
+                    return client.getBucket(property.read(instance, String.class));
                 }
             }
         }
@@ -133,12 +126,27 @@ public class RiakIntrospector {
         return null;
     }
 
+    public <T> String getKeyName(T instance) {
+        final Key key = this.getKey(instance);
+        return key == null ? null: key.getName();
+    }
+
     public <T> Key getKey(T instance) {
-        try {
-            return new Key(client, this.getBucket(instance), this.getKeyName(instance));
-        } catch (RuntimeException exception) {
-            throw new IllegalStateException("Unable to construct key from " + instance.getClass().getName() + ": " + exception.getMessage(), exception);
+        final IntrospectionDescriptor<T> descriptor = descriptor(instance);
+
+        for (Entry<RiakKey, Set<IntrospectedProperty<T>>> entry: descriptor.getProperties(RiakKey.class).entrySet()) {
+            for (IntrospectedProperty<T> property: entry.getValue()) {
+                if (property.canRead()) try {
+                    return property.read(instance, Key.class);
+                } catch (IntrospectionException exception) {
+                    final Bucket bucket = getBucket(instance);
+                    final String key = property.read(instance, String.class);
+                    return new Key(bucket, key);
+                }
+            }
         }
+
+        return null;
     }
 
     public <T> Metadata getMetadata(T instance) {
