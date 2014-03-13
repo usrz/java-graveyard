@@ -17,7 +17,7 @@ package org.usrz.libs.riak;
 
 import java.io.IOException;
 
-import org.usrz.libs.riak.utils.IterableFuture;
+import org.usrz.libs.utils.futures.IterableFuture;
 
 public interface RiakClient {
 

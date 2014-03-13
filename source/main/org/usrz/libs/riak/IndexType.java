@@ -15,6 +15,9 @@
  * ========================================================================== */
 package org.usrz.libs.riak;
 
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.util.Collection;
 
 public enum IndexType {
 
@@ -30,4 +33,45 @@ public enum IndexType {
         return suffix;
     }
 
+    public static IndexType typeFor(Type type) {
+        if (type == null) return null;
+
+        if (type instanceof Class) {
+            final Class<?> clazz = (Class<?>) type;
+
+            if (clazz.isArray()) return typeFor(clazz.getComponentType());
+
+            if ((byte.class.isAssignableFrom(clazz))    ||
+                (short.class.isAssignableFrom(clazz))   ||
+                (int.class.isAssignableFrom(clazz))     ||
+                (long.class.isAssignableFrom(clazz))    ||
+                (Byte.class.isAssignableFrom(clazz))    ||
+                (Short.class.isAssignableFrom(clazz))   ||
+                (Integer.class.isAssignableFrom(clazz)) ||
+                (Long.class.isAssignableFrom(clazz)))
+                    return IndexType.INTEGER;
+
+            if (String.class.isAssignableFrom(clazz))
+                return IndexType.BINARY;
+
+        }
+
+        if (type instanceof ParameterizedType) {
+            // Basically just check "? extends Collection<Foo>"
+            final ParameterizedType parameterized = (ParameterizedType) type;
+            final Type rawType = parameterized.getRawType();
+            if (rawType instanceof Class) {
+                final Class<?> clazz = (Class<?>) rawType;
+                if (Collection.class.isAssignableFrom(clazz)) {
+                    final Type parameterType = parameterized.getActualTypeArguments()[0];
+                    if (parameterType instanceof Class) {
+                        return typeFor(parameterType);
+                    }
+                }
+            }
+        }
+
+        /* Can not be mapped, apparently */
+        return null;
+    }
 }

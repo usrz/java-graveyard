@@ -19,8 +19,8 @@ import static java.lang.Integer.toHexString;
 
 import java.io.IOException;
 
-import org.usrz.libs.riak.utils.IterableFuture;
 import org.usrz.libs.riak.utils.RiakUtils;
+import org.usrz.libs.utils.futures.IterableFuture;
 
 public class Bucket implements RiakLocation {
 

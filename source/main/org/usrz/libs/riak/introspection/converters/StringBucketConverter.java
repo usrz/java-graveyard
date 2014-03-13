@@ -13,50 +13,20 @@
  * See the License for the specific language governing permissions and        *
  * limitations under the License.                                             *
  * ========================================================================== */
-package org.usrz.libs.riak;
+package org.usrz.libs.riak.introspection.converters;
 
-import java.io.IOException;
+import org.usrz.libs.riak.Key;
+import org.usrz.libs.riak.RiakClient;
 
-import org.usrz.libs.utils.futures.IterableFuture;
+public class StringBucketConverter extends RiakConverter<String, Key> {
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-public class FakeClient extends AbstractJsonClient {
-
-    public FakeClient() {
-        super(new ObjectMapper());
+    public StringBucketConverter(RiakClient client) {
+        super(client);
     }
 
     @Override
-    public <T> FetchRequest<T> fetch(Key key, ContentHandler<T> handler) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public <T> StoreRequest<T> store(Bucket bucket, T object, ContentHandler<T> handler) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public <T> StoreRequest<T> store(Key key, T object, ContentHandler<T> handler) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public IterableFuture<Bucket> getBuckets()
-    throws IOException {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public IterableFuture<Key> getKeys(Bucket bucket)
-    throws IOException {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public DeleteRequest delete(Key key) {
-        throw new UnsupportedOperationException();
+    public Key convert(String value) {
+        return new Key(client, value);
     }
 
 }

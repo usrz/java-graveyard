@@ -13,50 +13,29 @@
  * See the License for the specific language governing permissions and        *
  * limitations under the License.                                             *
  * ========================================================================== */
-package org.usrz.libs.riak;
+package org.usrz.libs.riak.introspection.converters;
 
-import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
-import org.usrz.libs.utils.futures.IterableFuture;
+import org.usrz.libs.riak.RiakClient;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.util.Converter;
 
-public class FakeClient extends AbstractJsonClient {
+public class ListConverter<IN , OUT> extends RiakConverter<Iterable<IN>, List<OUT>> {
 
-    public FakeClient() {
-        super(new ObjectMapper());
+    private final Converter<IN, OUT> converter;
+
+    public ListConverter(RiakClient client, Converter<IN, OUT> converter) {
+        super(client);
+        this.converter = converter;
     }
 
     @Override
-    public <T> FetchRequest<T> fetch(Key key, ContentHandler<T> handler) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public <T> StoreRequest<T> store(Bucket bucket, T object, ContentHandler<T> handler) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public <T> StoreRequest<T> store(Key key, T object, ContentHandler<T> handler) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public IterableFuture<Bucket> getBuckets()
-    throws IOException {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public IterableFuture<Key> getKeys(Bucket bucket)
-    throws IOException {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public DeleteRequest delete(Key key) {
-        throw new UnsupportedOperationException();
+    public List<OUT> convert(Iterable<IN> values) {
+        final List<OUT> set = new ArrayList<>();
+        for (IN value: values) set.add(converter.convert(value));
+        return set;
     }
 
 }

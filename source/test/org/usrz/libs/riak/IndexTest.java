@@ -18,6 +18,10 @@ package org.usrz.libs.riak;
 import static org.usrz.libs.riak.IndexType.BINARY;
 import static org.usrz.libs.riak.IndexType.INTEGER;
 
+import java.lang.reflect.Field;
+import java.util.Collection;
+import java.util.Map;
+
 import org.testng.annotations.Test;
 import org.usrz.libs.logging.Log;
 import org.usrz.libs.testing.AbstractTest;
@@ -58,6 +62,41 @@ public class IndexTest extends AbstractTest {
         }
 
 
+    }
+
+    @Test
+    public void indexTypeFor() {
+        for (Field field: MyTestInteger.class.getDeclaredFields()) {
+            assertEquals(IndexType.typeFor(field.getGenericType()), IndexType.INTEGER);
+        }
+
+        for (Field field: MyTestString.class.getDeclaredFields()) {
+            assertEquals(IndexType.typeFor(field.getGenericType()), IndexType.BINARY);
+        }
+
+        for (Field field: MyTestFail.class.getDeclaredFields()) {
+            assertNull(IndexType.typeFor(field.getGenericType()));
+        }
+
+
+    }
+
+    public static final class MyTestInteger {
+        public static int integer;
+        public static int[] intArray;
+        public static Collection<Integer> intCollection;
+    }
+
+    public static final class MyTestString {
+        public static String string;
+        public static String[] stringArray;
+        public static Collection<String> stringCollection;
+    }
+
+    public static final class MyTestFail {
+        public static Map<String, String> map;
+        public static double theDouble;
+        public static StringBuffer buffer;
     }
 
 }

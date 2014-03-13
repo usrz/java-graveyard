@@ -19,7 +19,7 @@ import java.util.EventObject;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 
-import org.usrz.libs.riak.utils.UncheckedExecutionException;
+import org.usrz.libs.utils.futures.UncheckedExecutionException;
 
 public class ResponseEvent<T> extends EventObject {
 

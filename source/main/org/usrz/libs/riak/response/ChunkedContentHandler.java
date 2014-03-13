@@ -19,7 +19,7 @@ import java.io.InputStream;
 import java.util.concurrent.ExecutionException;
 
 import org.usrz.libs.riak.PartialResponse;
-import org.usrz.libs.riak.utils.Puttable;
+import org.usrz.libs.utils.futures.Puttable;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.MappingIterator;

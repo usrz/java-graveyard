@@ -13,50 +13,61 @@
  * See the License for the specific language governing permissions and        *
  * limitations under the License.                                             *
  * ========================================================================== */
-package org.usrz.libs.riak;
+package foo.bar;
 
-import java.io.IOException;
+import org.bson.types.ObjectId;
 
-import org.usrz.libs.utils.futures.IterableFuture;
+import com.fasterxml.jackson.annotation.ObjectIdGenerator;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+public class MongoObjectIdGenerator extends ObjectIdGenerator<ObjectId> {
 
-public class FakeClient extends AbstractJsonClient {
+    private final Class<?> scope;
 
-    public FakeClient() {
-        super(new ObjectMapper());
+    public MongoObjectIdGenerator() {
+        scope = null;
+    }
+
+    public MongoObjectIdGenerator(Class<?> scope) {
+        this.scope = scope;
     }
 
     @Override
-    public <T> FetchRequest<T> fetch(Key key, ContentHandler<T> handler) {
-        throw new UnsupportedOperationException();
+    public Class<?> getScope() {
+        return scope;
     }
 
     @Override
-    public <T> StoreRequest<T> store(Bucket bucket, T object, ContentHandler<T> handler) {
-        throw new UnsupportedOperationException();
+    public boolean canUseFor(ObjectIdGenerator<?> generator) {
+        System.err.println("CAN USE FOR " + generator);
+        if (generator == this) return true;
+        if (generator.getClass().equals(this.getClass())) {
+            return scope == ((MongoObjectIdGenerator) generator).scope;
+        }
+        return false;
     }
 
     @Override
-    public <T> StoreRequest<T> store(Key key, T object, ContentHandler<T> handler) {
-        throw new UnsupportedOperationException();
+    public ObjectIdGenerator<ObjectId> forScope(Class<?> scope) {
+        System.err.println("SCOPE IS " + scope.getName());
+        if (scope == this.scope) return this;
+        return new MongoObjectIdGenerator(scope);
     }
 
     @Override
-    public IterableFuture<Bucket> getBuckets()
-    throws IOException {
-        throw new UnsupportedOperationException();
+    public ObjectIdGenerator<ObjectId> newForSerialization(Object context) {
+        return this;
     }
 
     @Override
-    public IterableFuture<Key> getKeys(Bucket bucket)
-    throws IOException {
-        throw new UnsupportedOperationException();
+    public ObjectIdGenerator.IdKey key(Object key) {
+        return new IdKey(getClass(), scope, key);
     }
 
     @Override
-    public DeleteRequest delete(Key key) {
-        throw new UnsupportedOperationException();
+    public ObjectId generateId(Object forPojo) {
+        new Exception("FOO").printStackTrace();
+        // TODO Auto-generated method stub
+        return null;
     }
 
 }

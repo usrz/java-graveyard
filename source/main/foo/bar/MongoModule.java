@@ -13,50 +13,32 @@
  * See the License for the specific language governing permissions and        *
  * limitations under the License.                                             *
  * ========================================================================== */
-package org.usrz.libs.riak;
+package foo.bar;
 
-import java.io.IOException;
+import com.fasterxml.jackson.core.Version;
+import com.fasterxml.jackson.databind.Module;
+import com.fasterxml.jackson.databind.module.SimpleSerializers;
 
-import org.usrz.libs.utils.futures.IterableFuture;
+public class MongoModule extends Module {
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-public class FakeClient extends AbstractJsonClient {
-
-    public FakeClient() {
-        super(new ObjectMapper());
+    protected MongoModule() {
     }
 
     @Override
-    public <T> FetchRequest<T> fetch(Key key, ContentHandler<T> handler) {
-        throw new UnsupportedOperationException();
+    public String getModuleName() {
+        return "foo";
     }
 
     @Override
-    public <T> StoreRequest<T> store(Bucket bucket, T object, ContentHandler<T> handler) {
-        throw new UnsupportedOperationException();
+    public Version version() {
+        return Version.unknownVersion();
     }
 
     @Override
-    public <T> StoreRequest<T> store(Key key, T object, ContentHandler<T> handler) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public IterableFuture<Bucket> getBuckets()
-    throws IOException {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public IterableFuture<Key> getKeys(Bucket bucket)
-    throws IOException {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public DeleteRequest delete(Key key) {
-        throw new UnsupportedOperationException();
+    public void setupModule(final SetupContext context) {
+        final SimpleSerializers serializers = new SimpleSerializers();
+        serializers.addSerializer(new ObjectIdSerializer());
+        context.addSerializers(serializers);
     }
 
 }

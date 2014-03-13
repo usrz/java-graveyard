@@ -23,7 +23,7 @@ import org.usrz.libs.riak.Response;
 import org.usrz.libs.riak.ResponseEvent;
 import org.usrz.libs.riak.ResponseFuture;
 import org.usrz.libs.riak.ResponseListener;
-import org.usrz.libs.riak.utils.SettableFuture;
+import org.usrz.libs.utils.futures.SettableFuture;
 
 import com.ning.http.client.listenable.ExecutionList;
 

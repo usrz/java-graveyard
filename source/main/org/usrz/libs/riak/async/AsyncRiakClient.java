@@ -43,12 +43,12 @@ import org.usrz.libs.riak.StoreRequest;
 import org.usrz.libs.riak.annotations.RiakIntrospector;
 import org.usrz.libs.riak.response.BucketListContentHandler;
 import org.usrz.libs.riak.response.KeyListContentHandler;
-import org.usrz.libs.riak.utils.IterableFuture;
-import org.usrz.libs.riak.utils.Puttable;
-import org.usrz.libs.riak.utils.QueueingFuture;
 import org.usrz.libs.riak.utils.RiakUtils;
 import org.usrz.libs.utils.beans.InstanceBuilder;
 import org.usrz.libs.utils.beans.MapperBuilder;
+import org.usrz.libs.utils.futures.IterableFuture;
+import org.usrz.libs.utils.futures.Puttable;
+import org.usrz.libs.utils.futures.QueueingFuture;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ning.http.client.AsyncHttpClient;

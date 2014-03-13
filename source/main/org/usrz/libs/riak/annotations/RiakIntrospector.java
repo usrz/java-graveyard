@@ -19,7 +19,9 @@ import static org.usrz.libs.riak.IndexType.BINARY;
 import static org.usrz.libs.riak.IndexType.INTEGER;
 
 import java.lang.reflect.Array;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
 
@@ -30,10 +32,10 @@ import org.usrz.libs.riak.Key;
 import org.usrz.libs.riak.LinksMap;
 import org.usrz.libs.riak.Metadata;
 import org.usrz.libs.riak.RiakClient;
-import org.usrz.libs.utils.beans.IntrospectedProperty;
-import org.usrz.libs.utils.beans.IntrospectionDescriptor;
-import org.usrz.libs.utils.beans.IntrospectionException;
-import org.usrz.libs.utils.beans.Introspector;
+import org.usrz.libs.utils.introspection.IntrospectedProperty;
+import org.usrz.libs.utils.introspection.IntrospectionDescriptor;
+import org.usrz.libs.utils.introspection.IntrospectionException;
+import org.usrz.libs.utils.introspection.Introspector;
 
 public class RiakIntrospector {
 
@@ -374,7 +376,14 @@ public class RiakIntrospector {
                     }
 
                     /* Do our best... */
-                    for (String value: metadata.get(field)) {
+                    final Set<String> values = metadata.get(field);
+                    if (property.canWrite(Set.class)) { // takes care of Set, Collection, Iterable, ...
+                        property.write(instance, values);
+                    } else if (property.canWrite(List.class)) {
+                        property.write(instance, new ArrayList<>(values));
+                    } else if (property.canWrite(String[].class)) {
+                        property.write(instance, values.toArray(new String[values.size()]));
+                    } else for (String value: metadata.get(field)) {
                         property.write(instance, value);
                     }
                 }

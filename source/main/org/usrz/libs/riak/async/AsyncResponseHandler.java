@@ -23,7 +23,7 @@ import org.usrz.libs.riak.Response;
 import org.usrz.libs.riak.response.ErrorContentHandler;
 import org.usrz.libs.riak.response.NullContentHandler;
 import org.usrz.libs.riak.response.SiblingsContentHandler;
-import org.usrz.libs.riak.utils.SettableFuture;
+import org.usrz.libs.utils.futures.SettableFuture;
 
 import com.ning.http.client.AsyncHandler;
 import com.ning.http.client.HttpResponseBodyPart;

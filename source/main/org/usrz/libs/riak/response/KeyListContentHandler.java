@@ -20,7 +20,7 @@ import java.util.List;
 import org.usrz.libs.riak.Bucket;
 import org.usrz.libs.riak.Key;
 import org.usrz.libs.riak.PartialResponse;
-import org.usrz.libs.riak.utils.Puttable;
+import org.usrz.libs.utils.futures.Puttable;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;

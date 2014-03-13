@@ -13,50 +13,33 @@
  * See the License for the specific language governing permissions and        *
  * limitations under the License.                                             *
  * ========================================================================== */
-package org.usrz.libs.riak;
+package org.usrz.libs.riak.introspection;
 
-import java.io.IOException;
+import org.usrz.libs.riak.Key;
 
-import org.usrz.libs.utils.futures.IterableFuture;
+import com.fasterxml.jackson.databind.BeanDescription;
+import com.fasterxml.jackson.databind.introspect.BeanPropertyDefinition;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+public class RiakEntityWriter<T> {
 
-public class FakeClient extends AbstractJsonClient {
+    private final BeanDescription description;
 
-    public FakeClient() {
-        super(new ObjectMapper());
+    private final KeySeri
+
+    protected RiakEntityWriter(BeanDescription description) {
+        this.description = description;
+
+        for (BeanPropertyDefinition property: description.findProperties()) {
+            if (property.couldSerialize()) {
+
+            }
+            System.err.println(property);
+        }
     }
 
-    @Override
-    public <T> FetchRequest<T> fetch(Key key, ContentHandler<T> handler) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public <T> StoreRequest<T> store(Bucket bucket, T object, ContentHandler<T> handler) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public <T> StoreRequest<T> store(Key key, T object, ContentHandler<T> handler) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public IterableFuture<Bucket> getBuckets()
-    throws IOException {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public IterableFuture<Key> getKeys(Bucket bucket)
-    throws IOException {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public DeleteRequest delete(Key key) {
-        throw new UnsupportedOperationException();
+    public RiakEntityWriter<T> writeKey(T object, Key key) {
+        description.
+        return this;
     }
 
 }

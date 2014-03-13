@@ -13,50 +13,17 @@
  * See the License for the specific language governing permissions and        *
  * limitations under the License.                                             *
  * ========================================================================== */
-package org.usrz.libs.riak;
+package org.usrz.libs.utils.converters;
 
-import java.io.IOException;
+import java.util.HashSet;
 
-import org.usrz.libs.utils.futures.IterableFuture;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-public class FakeClient extends AbstractJsonClient {
-
-    public FakeClient() {
-        super(new ObjectMapper());
-    }
+public class HashSetConverter implements Converter<Iterable<?>, HashSet<?>> {
 
     @Override
-    public <T> FetchRequest<T> fetch(Key key, ContentHandler<T> handler) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public <T> StoreRequest<T> store(Bucket bucket, T object, ContentHandler<T> handler) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public <T> StoreRequest<T> store(Key key, T object, ContentHandler<T> handler) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public IterableFuture<Bucket> getBuckets()
-    throws IOException {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public IterableFuture<Key> getKeys(Bucket bucket)
-    throws IOException {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public DeleteRequest delete(Key key) {
-        throw new UnsupportedOperationException();
+    public HashSet<?> convert(Iterable<?> values) {
+        final HashSet<Object> set = new HashSet<>();
+        for (Object value: values) set.add(value);
+        return set;
     }
 
 }

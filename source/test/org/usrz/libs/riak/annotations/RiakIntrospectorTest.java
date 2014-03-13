@@ -21,6 +21,7 @@ import static org.usrz.libs.riak.IndexType.INTEGER;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 
 import org.testng.annotations.Test;
 import org.usrz.libs.riak.Bucket;
@@ -200,6 +201,9 @@ public class RiakIntrospectorTest extends AbstractTest {
                                                            .build();
     private final Metadata metadata = new MetadataBuilder().add("field1", "value1")
                                                            .add("field2", "value2")
+                                                           .add("fieldM", "vamueM1")
+                                                           .add("fieldM", "vamueM2")
+                                                           .add("fieldM", "vamueM3")
                                                            .build();
 
     @Test
@@ -266,4 +270,56 @@ public class RiakIntrospectorTest extends AbstractTest {
         private Key    k; @RiakKey    public void setK(Key    k) { this.k = k; };
         private Bucket b; @RiakBucket public void setB(Bucket b) { this.b = b; };
     }
+
+    @Test
+    public void testMetadataInstrumentation() {
+        final MetadataInstrumentable object = new MetadataInstrumentable();
+        introspector.setMetadata(object, metadata);
+        assertEquals(object.f1, "value1");
+        assertEquals(object.f2, "value2");
+        assertEquals(object.m, metadata.get("fieldM"));
+    }
+
+    private class MetadataInstrumentable {
+        private String f1; @RiakMetadata("field1") public void setF1(String f) { f1 = f; };
+        private String f2; @RiakMetadata("field2") public void setF2(String f) { f2 = f; };
+        private Collection<String> m; @RiakMetadata("fieldM") public void setM(Collection<String> m) { this.m = m; };
+    }
+
+    @Test
+    public void testMetadataInstrumentationList() {
+        final MetadataInstrumentableList object = new MetadataInstrumentableList();
+        introspector.setMetadata(object, metadata);
+        assertEquals(object.m, metadata.get("fieldM"));
+    }
+
+    private class MetadataInstrumentableList {
+        private List<?> m; @RiakMetadata("fieldM") public void setM(List<?> m) { this.m = m; };
+    }
+
+    @Test
+    public void testMetadataInstrumentationArray() {
+        final MetadataInstrumentableArray object = new MetadataInstrumentableArray();
+        introspector.setMetadata(object, metadata);
+        assertEqualsNoOrder(object.m1, metadata.get("fieldM").toArray());
+        assertEqualsNoOrder(object.m2, metadata.get("fieldM").toArray());
+    }
+
+    private class MetadataInstrumentableArray {
+        private Object[] m1; @RiakMetadata("fieldM") public void setM1(Object[] m) { m1 = m; };
+        private String[] m2; @RiakMetadata("fieldM") public void setM2(String[] m) { m2 = m; };
+    }
+
+    @Test
+    public void testMetadataInstrumentationMap() {
+        final MetadataInstrumentableMap object = new MetadataInstrumentableMap();
+        assertNull(object.m);
+        introspector.setMetadata(object, metadata);
+        assertEquals(object.m, metadata);
+    }
+
+    private class MetadataInstrumentableMap {
+        private Metadata m; @RiakMetadata public void setM(Metadata m) { this.m = m; };
+    }
+
 }

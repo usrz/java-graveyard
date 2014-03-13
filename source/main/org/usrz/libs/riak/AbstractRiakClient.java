@@ -20,8 +20,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import org.usrz.libs.riak.utils.ConvertingIterableFuture;
-import org.usrz.libs.riak.utils.IterableFuture;
+import org.usrz.libs.utils.futures.ConvertingIterableFuture;
+import org.usrz.libs.utils.futures.IterableFuture;
 
 public abstract class AbstractRiakClient implements RiakClient {
 
