@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ivy-module version="2.0">
 
-  <info organisation="org.usrz.libs" module="riak" revision="0.0.0"/>
+  <info organisation="org.usrz" module="graveyard" revision="0.0.0"/>
 
   <configurations>
     <conf name="default" visibility="public"/>
@@ -10,9 +10,9 @@
   </configurations>
 
   <publications>
-      <artifact name="riak" type="bin" ext="jar" conf="default"/>
-      <artifact name="riak" type="src" ext="zip" conf="default"/>
-      <artifact name="riak" type="doc" ext="zip" conf="default"/>
+      <artifact name="graveyard" type="bin" ext="jar" conf="default"/>
+      <artifact name="graveyard" type="src" ext="zip" conf="default"/>
+      <artifact name="graveyard" type="doc" ext="zip" conf="default"/>
   </publications>
 
   <dependencies>
